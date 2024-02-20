@@ -25,7 +25,7 @@ class TheThemePreference {
 
   Future<double> getFontSize() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble(FONT_SIZE) ?? 20;
+    return prefs.getDouble(FONT_SIZE) ?? 27;
   }
 }
 
@@ -41,7 +41,7 @@ class TheThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  double _fontSize = 20;
+  double _fontSize = 27;
   double get fontSize => _fontSize;
 
   set fontSize(double value) {

@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -38,6 +38,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   dynamic_color: ^1.6.9
+  flutter_svg: ^2.0.9
 
 dev_dependencies:
   flutter_test:
@@ -83,9 +84,9 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  assets:
-    - images/kaaba_3d.png
-    - images/moon_3d.png
+  # assets:
+  #   - images/kaaba_3d.png
+  #   - images/moon_3d.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
@@ -100,14 +101,13 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: Vazirmatn
+    - family: Rubik
       fonts:
-        - asset: fonts/Vazirmatn-Regular.ttf
-        - asset: fonts/Vazirmatn-Thin.ttf
-          weight: 100
-        - asset: fonts/Vazirmatn-Bold.ttf
+        - asset: fonts/Rubik-Regular.ttf
+          weight: 400
+        - asset: fonts/Rubik-Bold.ttf
           weight: 600
-        - asset: fonts/Vazirmatn-Light.ttf
+        - asset: fonts/Rubik-Light.ttf
           weight: 300
     - family: Lateef
       fonts:

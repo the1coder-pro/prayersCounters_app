@@ -3,64 +3,31 @@ import 'package:flutter/material.dart';
 // TextTheme
 const textTheme = TextTheme(
     displayLarge: TextStyle(
-        fontFamily: "Lateef",
-        fontSize: 127,
-        fontWeight: FontWeight.w300,
-        letterSpacing: -1.5),
+        fontFamily: "Lateef", fontSize: 127, fontWeight: FontWeight.w300),
     displayMedium: TextStyle(
-        fontFamily: "Lateef",
-        fontSize: 79,
-        fontWeight: FontWeight.w300,
-        letterSpacing: -0.5),
+        fontFamily: "Lateef", fontSize: 79, fontWeight: FontWeight.w300),
     displaySmall: TextStyle(
         fontFamily: "Lateef", fontSize: 64, fontWeight: FontWeight.w400),
     headlineMedium: TextStyle(
-        fontFamily: "Lateef",
-        fontSize: 45,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0.25),
+        fontFamily: "Lateef", fontSize: 45, fontWeight: FontWeight.w400),
     headlineSmall: TextStyle(
         fontFamily: "Lateef", fontSize: 32, fontWeight: FontWeight.w400),
     titleLarge: TextStyle(
-        fontFamily: "Lateef",
-        fontSize: 26,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.15),
+        fontFamily: "Lateef", fontSize: 26, fontWeight: FontWeight.w500),
     titleMedium: TextStyle(
-        fontFamily: "Lateef",
-        fontSize: 21,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0.15),
+        fontFamily: "Lateef", fontSize: 21, fontWeight: FontWeight.w400),
     titleSmall: TextStyle(
-        fontFamily: "Lateef",
-        fontSize: 19,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.1),
+        fontFamily: "Lateef", fontSize: 19, fontWeight: FontWeight.w500),
     bodyLarge: TextStyle(
-        fontFamily: "Vazirmatn",
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0.5),
+        fontFamily: "Rubik", fontSize: 14, fontWeight: FontWeight.w400),
     bodyMedium: TextStyle(
-        fontFamily: "Vazirmatn",
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0.25),
+        fontFamily: "Rubik", fontSize: 12, fontWeight: FontWeight.w400),
     labelLarge: TextStyle(
-        fontFamily: "Vazirmatn",
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 1.25),
+        fontFamily: "Rubik", fontSize: 12, fontWeight: FontWeight.w500),
     bodySmall: TextStyle(
-        fontFamily: "Vazirmatn",
-        fontSize: 10,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0.4),
+        fontFamily: "Rubik", fontSize: 10, fontWeight: FontWeight.w400),
     labelSmall: TextStyle(
-        fontFamily: "Vazirmatn",
-        fontSize: 8,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 1.5));
+        fontFamily: "Rubik", fontSize: 8, fontWeight: FontWeight.w400));
 
 // Purple
 
