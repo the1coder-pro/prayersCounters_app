@@ -16,7 +16,11 @@ class Prayer {
   @HiveField(3)
   String content;
 
-  Prayer(this.name, this.total, this.finished, this.content);
+  @HiveField(5)
+  int numberOfCompletedPrayers = 0;
+
+  Prayer(this.name, this.total, this.finished, this.content,
+      {this.numberOfCompletedPrayers = 0});
 
   String toString() => "$name - ($total/$finished)";
   void increase() => this.finished += 1;

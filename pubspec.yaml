@@ -40,6 +40,8 @@ dependencies:
   dynamic_color: ^1.6.9
   flutter_svg: ^2.0.9
   flutter_slidable: ^3.0.1
+  animations: ^2.0.11
+  flutter_animate: ^4.5.0
 
 dev_dependencies:
   flutter_test:
