@@ -1,5 +1,5 @@
 name: prayers_counters_app
-description: "عداد القضاء"
+description: "مسباح"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -119,6 +119,10 @@ flutter:
           weight: 600
         - asset: fonts/Lateef-Light.ttf
           weight: 300
+    - family: Scheherazade
+      fonts: 
+        - asset: fonts/ScheherazadeNew-Regular.ttf
+          weight: 400
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

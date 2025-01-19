@@ -1,15 +1,16 @@
 import 'package:animations/animations.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:prayers_counters_app/color_schemes.g.dart';
+import 'package:prayers_counters_app/counter_details_page.dart';
 import 'package:prayers_counters_app/prayers_model.dart';
+import 'package:prayers_counters_app/settings_page.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'settings.dart';
+import 'preferences.dart';
 
 String boxName = 'prayersBox';
 
@@ -159,7 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Box<Prayer>? mainBox;
 
-  Set<ViewMode> selected = {ViewMode.grid};
+  Set<ViewMode> selected = {ViewMode.list};
 
   @override
   Widget build(BuildContext context) {
@@ -170,33 +171,21 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
           actions: [
             Padding(
-              padding: const EdgeInsets.only(left: 8, top: 8, bottom: 8),
-              child: SegmentedButton<ViewMode>(
+              padding: const EdgeInsets.all(8.0),
+              child: SegmentedButton(
                   onSelectionChanged: (Set<ViewMode> value) {
                     setState(() {
                       selected = {value.first};
                     });
                   },
                   showSelectedIcon: false,
-                  segments: const [
+                  segments: [
                     ButtonSegment(
-                        icon: Padding(
-                          padding: EdgeInsets.only(bottom: 8),
-                          child: Icon(
-                            Icons.grid_view_outlined,
-                            size: 20,
-                          ),
-                        ),
-                        value: ViewMode.grid),
-                    ButtonSegment(
-                        icon: Padding(
-                          padding: EdgeInsets.only(bottom: 8),
-                          child: Icon(
-                            Icons.list_outlined,
-                            size: 20,
-                          ),
-                        ),
+                        icon: const Icon(Icons.list_outlined),
                         value: ViewMode.list),
+                    ButtonSegment(
+                        icon: const Icon(Icons.grid_view_outlined),
+                        value: ViewMode.grid),
                   ],
                   selected: selected),
             )
@@ -310,7 +299,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     );
                   },
                   child: selected.contains(ViewMode.list)
-                      ? ListView.builder(
+                      ? ListView.separated(
+                          separatorBuilder: (_, __) => const Divider(),
                           itemCount: box.values.length,
                           itemBuilder: (context, i) {
                             var prayer = box.getAt(i)!;
@@ -320,16 +310,46 @@ class _MyHomePageState extends State<MyHomePage> {
                                 children: [
                                   SlidableAction(
                                     onPressed: (context) async {
-                                      await Hive.box<Prayer>(boxName)
-                                          .delete(prayer.name);
-                                      setState(() {});
+                                      // show a confirmation dialog
+                                      var result = await showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return AlertDialog(
+                                              title: const Text("تأكيد الحذف"),
+                                              content: const Text(
+                                                  "هل أنت متأكد من حذف هذا العداد؟"),
+                                              actions: [
+                                                TextButton(
+                                                    onPressed: () {
+                                                      Navigator.pop(
+                                                          context, false);
+                                                    },
+                                                    child: const Text("إلغاء")),
+                                                TextButton(
+                                                    onPressed: () {
+                                                      Navigator.pop(
+                                                          context, true);
+                                                    },
+                                                    child: const Text("حذف")),
+                                              ],
+                                            );
+                                          });
+
+                                      if (result == true) {
+                                        await Hive.box<Prayer>(boxName)
+                                            .delete(prayer.name);
+                                        setState(() {});
+                                      }
+
+                                      // await Hive.box<Prayer>(boxName)
+                                      //     .delete(prayer.name);
+                                      // setState(() {});
                                     },
                                     backgroundColor: Theme.of(context)
                                         .colorScheme
                                         .errorContainer,
-                                    foregroundColor: Theme.of(context)
-                                        .colorScheme
-                                        .onErrorContainer,
+                                    foregroundColor:
+                                        Theme.of(context).colorScheme.onSurface,
                                     icon: Icons.delete,
                                     label: 'حذف',
                                   ),
@@ -359,28 +379,32 @@ class _MyHomePageState extends State<MyHomePage> {
                                   }));
                                 },
                                 trailing: CircleAvatar(
-                                    radius: 20,
+                                    radius: 25,
                                     backgroundColor:
                                         Theme.of(context).colorScheme.primary,
-                                    child: Text(
-                                      prayer.numberOfCompletedPrayers > 0
-                                          ? prayer.numberOfCompletedPrayers
-                                              .toString()
-                                          : "${prayer.finished}/${prayer.total}",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontFeatures:
-                                            prayer.numberOfCompletedPrayers > 0
-                                                ? []
-                                                : [FontFeature.fractions()],
-                                        fontFamily: Theme.of(context)
-                                            .textTheme
-                                            .labelSmall!
-                                            .fontFamily,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onPrimary,
-                                        fontSize: 20,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Text(
+                                        prayer.numberOfCompletedPrayers > 0
+                                            ? prayer.numberOfCompletedPrayers
+                                                .toString()
+                                            : "${prayer.finished}/${prayer.total}",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontFeatures:
+                                              prayer.numberOfCompletedPrayers >
+                                                      0
+                                                  ? []
+                                                  : [FontFeature.fractions()],
+                                          fontFamily: Theme.of(context)
+                                              .textTheme
+                                              .labelSmall!
+                                              .fontFamily,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary,
+                                          fontSize: 25,
+                                        ),
                                       ),
                                     )),
                               ),
@@ -404,7 +428,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               },
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Card(
+                                child: Card.outlined(
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(30)),
                                   child: Container(
@@ -413,7 +437,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                         border: Border.all(
                                             color: Theme.of(context)
                                                 .colorScheme
-                                                .primaryContainer)),
+                                                .onSurface)),
                                     child: Padding(
                                       padding: const EdgeInsets.only(
                                           left: 10, right: 10),
@@ -443,16 +467,24 @@ class _MyHomePageState extends State<MyHomePage> {
                                               ]),
                                           const SizedBox(height: 10),
                                           SizedBox(
-                                            height: 70,
+                                            height: 80,
                                             width: 140,
                                             child: FilledButton(
+                                              style: ButtonStyle(
+                                                  shape: WidgetStateProperty.all<
+                                                          RoundedRectangleBorder>(
+                                                      RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      20)))),
                                               child: Text(
                                                   "${prayer.total}/${prayer.finished}",
                                                   style: const TextStyle(
                                                       fontFeatures: [
                                                         FontFeature.fractions()
                                                       ],
-                                                      fontSize: 25)),
+                                                      fontSize: 35)),
                                               onPressed: () async {
                                                 if (prayer.finished !=
                                                     prayer.total) {
@@ -462,13 +494,14 @@ class _MyHomePageState extends State<MyHomePage> {
                                                       .put(
                                                           prayer.name,
                                                           Prayer(
-                                                              prayer.name,
-                                                              prayer.total,
-                                                              prayer.finished,
-                                                              prayer.content,
-                                                              numberOfCompletedPrayers:
-                                                                  prayer
-                                                                      .numberOfCompletedPrayers))
+                                                            prayer.name,
+                                                            prayer.total,
+                                                            prayer.finished,
+                                                            prayer.content,
+                                                            numberOfCompletedPrayers:
+                                                                prayer
+                                                                    .numberOfCompletedPrayers,
+                                                          ))
                                                       .then((value) =>
                                                           setState(() {}));
                                                 } else {
@@ -479,7 +512,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                                       prayer.name,
                                                       Prayer(
                                                           prayer.name,
-                                                          10,
+                                                          prayer.total,
                                                           prayer.finished,
                                                           prayer.content,
                                                           numberOfCompletedPrayers:
@@ -528,38 +561,44 @@ class _MyHomePageState extends State<MyHomePage> {
           return Directionality(
             textDirection: TextDirection.rtl,
             child: AlertDialog(
-              title: Text(prayer != null ? "تعديل العداد" : "إضافة عداد جديد"),
+              title: Text(prayer != null ? "تعديل العداد" : "اضافة عداد جديد"),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
                     children: [
                       Expanded(
-                        flex: 2,
+                        flex: 3,
                         child: TextField(
+                            style: TextStyle(fontSize: 20),
                             decoration: InputDecoration(
-                                label: Text("العنوان"),
+                                label: Text("العنوان",
+                                    style: TextStyle(fontSize: 20)),
                                 border: OutlineInputBorder()),
                             controller: titleTextController),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 6),
                       Expanded(
-                        flex: 1,
+                        flex: 2,
                         child: TextField(
+                          style: TextStyle(fontSize: 20),
                           controller: limitTextController,
                           decoration: InputDecoration(
-                              label: Text("العداد"),
+                              label: Text("العداد",
+                                  style: TextStyle(fontSize: 20)),
                               border: OutlineInputBorder()),
                           keyboardType: TextInputType.number,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   TextField(
                     maxLines: 10,
+                    style: TextStyle(fontSize: 20),
                     decoration: InputDecoration(
-                        label: Text("الذكر"), border: OutlineInputBorder()),
+                        label: Text("الذكر", style: TextStyle(fontSize: 20)),
+                        border: OutlineInputBorder()),
                     controller: contentTextController,
                   ),
                 ],
@@ -567,7 +606,7 @@ class _MyHomePageState extends State<MyHomePage> {
               actions: [
                 TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text("إلغاء")),
+                    child: Text("إلغاء", style: TextStyle(fontSize: 20))),
                 FilledButton(
                     onPressed: () async {
                       final box = await Hive.box<Prayer>(boxName);
@@ -582,7 +621,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   numberOfCompletedPrayers: 0))
                           .then((value) => Navigator.pop(context));
                     },
-                    child: Text("إضافة")),
+                    child: Text("اضافة", style: TextStyle(fontSize: 20))),
               ],
             ),
           );
@@ -634,396 +673,5 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
               ),
             ));
-  }
-}
-
-class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
-
-  @override
-  State<SettingsPage> createState() => _SettingsPageState();
-}
-
-class _SettingsPageState extends State<SettingsPage> {
-  List<bool> isSelected = [false, false, false, false, false, false, false];
-  getIsSelected(ThemeColorProvider colorChangeProvider) {
-    List<bool> isSelected = [];
-    for (int i = 0; i < colorSchemes.length; i++) {
-      if (colorChangeProvider.colorTheme == i) {
-        isSelected.add(true);
-      } else {
-        isSelected.add(false);
-      }
-    }
-    return isSelected;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final themeChangeProvider = Provider.of<TheThemeProvider>(context);
-    final colorChangeProvider = Provider.of<ThemeColorProvider>(context);
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        appBar: AppBar(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            leading: IconButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                icon: const Icon(Icons.close)),
-            centerTitle: true,
-            title: Text(
-              "المظهر",
-              style: TextStyle(fontSize: 40),
-            )),
-        body: Column(children: [
-          SwitchListTile(
-              title: Text("الوضع الليلي", style: TextStyle(fontSize: 25)),
-              value: themeChangeProvider.darkTheme,
-              onChanged: (bool value) {
-                themeChangeProvider.darkTheme = value;
-              }),
-          const SizedBox(height: 10),
-          ListTile(
-            title: Text(
-              "السمات",
-              style: TextStyle(fontSize: 25),
-            ),
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: Scaffold(
-                              appBar: AppBar(
-                                title: Text(
-                                  "السمات",
-                                  style: TextStyle(fontSize: 25),
-                                ),
-                              ),
-                              body: ListView.builder(
-                                  itemCount: colorSchemes.length,
-                                  itemBuilder: (context, index) {
-                                    // check what color is selected
-                                    return ListTile(
-                                      trailing: isSelected[index]
-                                          ? const Icon(Icons.check)
-                                          : null,
-                                      title: Text(
-                                        colorSchemes[index],
-                                        style: TextStyle(fontSize: 25),
-                                      ),
-                                      onTap: () {
-                                        colorChangeProvider.colorTheme = index;
-                                        setState(() {
-                                          isSelected = getIsSelected(
-                                              colorChangeProvider);
-                                        });
-                                      },
-                                    );
-                                  }),
-                            ),
-                          )));
-            },
-          ),
-          // Center(
-          //   child: ToggleButtons(
-          //     selectedBorderColor:
-          //         Theme.of(context).colorScheme.primary,
-          //     borderWidth: 4,
-          //     isSelected: isSelected,
-          //     onPressed: (int index) {
-          //       setState(() {
-          //         for (int buttonIndex = 0;
-          //             buttonIndex < isSelected.length;
-          //             buttonIndex++) {
-          //           if (buttonIndex == index) {
-          //             isSelected[buttonIndex] = true;
-          //             colorChangeProvider.colorTheme =
-          //                 buttonIndex;
-          //           } else {
-          //             isSelected[buttonIndex] = false;
-          //           }
-          //         }
-          //       });
-          //     },
-          //     children: <Widget>[
-          //       themeButton(
-          //           themeChange: themeChangeProvider,
-          //           lightColorScheme: purpleLightColorScheme,
-          //           darkColorScheme: purpleDarkColorScheme),
-          //       themeButton(
-          //           themeChange: themeChangeProvider,
-          //           lightColorScheme: baigeLightColorScheme,
-          //           darkColorScheme: baigeDarkColorScheme),
-          //       themeButton(
-          //           themeChange: themeChangeProvider,
-          //           lightColorScheme: redLightColorScheme,
-          //           darkColorScheme: redDarkColorScheme),
-          //       themeButton(
-          //           themeChange: themeChangeProvider,
-          //           lightColorScheme: blueLightColorScheme,
-          //           darkColorScheme: blueDarkColorScheme),
-          //       themeButton(
-          //           themeChange: themeChangeProvider,
-          //           lightColorScheme: greyLightColorScheme,
-          //           darkColorScheme: greyDarkColorScheme),
-          //       themeButton(
-          //           themeChange: themeChangeProvider,
-          //           lightColorScheme: greenLightColorScheme,
-          //           darkColorScheme: greenDarkColorScheme),
-          //       const Icon(Icons.phone_android),
-          //     ],
-          //   ),
-          // ),
-          const SizedBox(height: 10),
-          // Text(
-          //   "حجم الخط",
-          //   style: TextStyle(
-          //       fontSize: 25),
-          //   textAlign: TextAlign.end,
-          // ),
-          // Center(
-          //   child: Slider(
-          //     value: themeChangeProvider.fontSize,
-          //     max: 36,
-          //     min: 20,
-          //     divisions: 7,
-          //     label: themeChangeProvider.fontSize
-          //         .round()
-          //         .toString(),
-          //     onChanged: (double value) {
-          //       setState(() {
-          //         themeChangeProvider.fontSize = value;
-          //       });
-          //     },
-          //   ),
-          // ),
-        ]),
-      ),
-    );
-  }
-}
-
-// ignore: must_be_immutable
-class CounterDetailsPage extends StatefulWidget {
-  Prayer prayer;
-  CounterDetailsPage({super.key, required this.prayer});
-
-  @override
-  State<CounterDetailsPage> createState() => _CounterDetailsPageState();
-}
-
-class _CounterDetailsPageState extends State<CounterDetailsPage>
-    with TickerProviderStateMixin {
-  AnimationController? controller;
-  AnimationController? reloadController;
-
-  @override
-  void initState() {
-    controller = AnimationController(vsync: this);
-    reloadController = AnimationController(vsync: this);
-    super.initState();
-  }
-
-  int fontSize = 20;
-
-  @override
-  Widget build(BuildContext context) {
-    final themeChangeProvider = Provider.of<TheThemeProvider>(context);
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          title: Text(widget.prayer.name),
-          centerTitle: true,
-          // add buttons to increase and decrease the font
-          actions: [
-            IconButton(
-                onPressed: () {
-                  setState(() {
-                    themeChangeProvider.fontSize -= 1;
-                  });
-                },
-                icon: const Icon(Icons.text_decrease_outlined)),
-            IconButton(
-                onPressed: () {
-                  themeChangeProvider.fontSize += 1;
-                },
-                icon: const Icon(Icons.text_increase_outlined)),
-          ],
-        ),
-        body: Center(
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Card.outlined(
-                      elevation: 0.5,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: ListView(
-                          shrinkWrap: true,
-                          children: [
-                            Text(widget.prayer.content,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: themeChangeProvider.fontSize - 7))
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.only(left: 40, top: 10, right: 40),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          height: 60,
-                          width: 60,
-                          child: FloatingActionButton.small(
-                            heroTag: 'reloadFAB',
-                            elevation: 0.4,
-                            onPressed: () async {
-                              widget.prayer.finished = 0;
-                              await Hive.box<Prayer>(boxName).put(
-                                  widget.prayer.name,
-                                  Prayer(
-                                    widget.prayer.name,
-                                    widget.prayer.total,
-                                    widget.prayer.finished,
-                                    widget.prayer.content,
-                                  ));
-                              setState(() {});
-                              reloadController!.forward(from: 0);
-                            },
-                            child: Animate(
-                                controller: reloadController,
-                                effects: [
-                                  RotateEffect(
-                                    duration: 200.milliseconds,
-                                  )
-                                ],
-                                child: Icon(Icons.replay_outlined)),
-                          ),
-                        ),
-                        Container(
-                          height: 60,
-                          width: 60,
-                          child: FloatingActionButton.small(
-                            heroTag: 'completedFAB',
-                            elevation: 0.4,
-                            onPressed: null,
-                            child: Text(
-                              widget.prayer.numberOfCompletedPrayers.toString(),
-                              style: TextStyle(fontSize: 20),
-                            ),
-                          ),
-                        )
-                      ]),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                          left: 40, right: 40, top: 20, bottom: 20),
-                      child: Container(
-                        height: 300,
-                        width: 300,
-                        child: FloatingActionButton.large(
-                          elevation: 0.4,
-                          heroTag: 'IncreaseFAB',
-                          onPressed: () async {
-                            if (widget.prayer.finished != widget.prayer.total) {
-                              widget.prayer.finished += 1;
-                              await Hive.box<Prayer>(boxName)
-                                  .put(
-                                      widget.prayer.name,
-                                      Prayer(
-                                          widget.prayer.name,
-                                          widget.prayer.total,
-                                          widget.prayer.finished,
-                                          widget.prayer.content,
-                                          numberOfCompletedPrayers: widget
-                                              .prayer.numberOfCompletedPrayers))
-                                  .then((value) => setState(() {}));
-                            } else {
-                              widget.prayer.finished = 0;
-                              widget.prayer.numberOfCompletedPrayers++;
-                              await Hive.box<Prayer>(boxName).put(
-                                  widget.prayer.name,
-                                  Prayer(
-                                      widget.prayer.name,
-                                      10,
-                                      widget.prayer.finished,
-                                      widget.prayer.content,
-                                      numberOfCompletedPrayers: widget
-                                          .prayer.numberOfCompletedPrayers));
-                              setState(() {});
-                            }
-                            controller!.forward(from: 0);
-                          },
-                          child: Animate(
-                            controller: controller,
-                            effects: [
-                              ScaleEffect(duration: 200.milliseconds),
-                              // RotateEffect(duration: 200.milliseconds)
-                            ],
-                            child: Text(
-                              widget.prayer.finished.toString(),
-                              style: TextStyle(fontSize: 40),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-              ]),
-        ),
-      ),
-    );
-  }
-}
-
-class themeButton extends StatelessWidget {
-  const themeButton(
-      {super.key,
-      required this.themeChange,
-      required this.lightColorScheme,
-      required this.darkColorScheme});
-
-  final TheThemeProvider themeChange;
-  final ColorScheme lightColorScheme;
-  final ColorScheme darkColorScheme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        color: themeChange.darkTheme
-            ? darkColorScheme.surface
-            : lightColorScheme.surface,
-        child: FloatingActionButton.small(
-          elevation: 0,
-          onPressed: null,
-          foregroundColor: themeChange.darkTheme
-              ? darkColorScheme.onSecondary
-              : lightColorScheme.onSecondary,
-          backgroundColor: themeChange.darkTheme
-              ? darkColorScheme.secondary
-              : lightColorScheme.secondary,
-          child: const Icon(Icons.add),
-        ));
   }
 }
