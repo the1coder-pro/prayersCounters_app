@@ -29,6 +29,7 @@ List<String> colorSchemes = [
   "Blue",
   "Grey",
   "Green",
+  "Orange",
   "Device"
 ];
 
@@ -71,13 +72,15 @@ class _MyAppState extends State<MyApp> {
         return darkMode ? baigeDarkColorScheme : baigeLightColorScheme;
       case "Red":
         return darkMode ? redDarkColorScheme : redLightColorScheme;
-
       case "Grey":
         return darkMode ? greyDarkColorScheme : greyLightColorScheme;
       case "Green":
         return darkMode ? greenDarkColorScheme : greenLightColorScheme;
       case "Blue":
         return darkMode ? blueDarkColorScheme : blueLightColorScheme;
+      case "Orange":
+        return darkMode ? orangeDarkColorScheme : orangeLightColorScheme;
+
       case "Device":
         return darkMode
             ? (deviceDarkColorTheme ?? blueDarkColorScheme)
@@ -165,39 +168,374 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final colorChangeProvider = Provider.of<ThemeColorProvider>(context);
+    final themeChangeProvider = Provider.of<TheThemeProvider>(context);
     isSelected = getIsSelected(colorChangeProvider);
 
     return Scaffold(
       appBar: AppBar(
           actions: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: SegmentedButton(
-                  onSelectionChanged: (Set<ViewMode> value) {
-                    setState(() {
-                      selected = {value.first};
-                    });
-                  },
-                  showSelectedIcon: false,
-                  segments: [
-                    ButtonSegment(
-                        icon: const Icon(Icons.list_outlined),
-                        value: ViewMode.list),
-                    ButtonSegment(
-                        icon: const Icon(Icons.grid_view_outlined),
-                        value: ViewMode.grid),
-                  ],
-                  selected: selected),
-            )
+            PopupMenuButton(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (String value) {
+                switch (value) {
+                  case 'appearance':
+                    showModalBottomSheet(
+                        isScrollControlled: true,
+                        context: context,
+                        builder: (context) {
+                          return Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: Scaffold(
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainer,
+                              appBar: AppBar(
+                                  backgroundColor: Colors.transparent,
+                                  leading: IconButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      icon: const Icon(Icons.close)),
+                                  centerTitle: true,
+                                  title: Text(
+                                    "المظهر",
+                                    style: TextStyle(
+                                        fontSize:
+                                            themeChangeProvider.fontSize + 5),
+                                  )),
+                              body: ListView(
+                                padding: const EdgeInsets.all(16),
+                                children: [
+                                  Card(
+                                    elevation: 0,
+                                    color:
+                                        Theme.of(context).colorScheme.surface,
+                                    clipBehavior: Clip.antiAlias,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        SwitchListTile(
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                    horizontal: 16),
+                                            title: Text("الوضع الداكن",
+                                                style: TextStyle(
+                                                    fontSize:
+                                                        themeChangeProvider
+                                                            .fontSize)),
+                                            value:
+                                                themeChangeProvider.darkTheme,
+                                            onChanged: (bool value) {
+                                              themeChangeProvider.darkTheme =
+                                                  value;
+                                            }),
+                                        const Divider(height: 1),
+                                        Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "السمات",
+                                                style: TextStyle(
+                                                    fontSize:
+                                                        themeChangeProvider
+                                                            .fontSize),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              Builder(
+                                                builder: (context) {
+                                                  final buttons = List.generate(
+                                                      colorSchemes.length,
+                                                      (index) {
+                                                    final bool selected =
+                                                        isSelected[index];
+                                                    Widget childWidget;
+                                                    switch (
+                                                        colorSchemes[index]) {
+                                                      case "Purple":
+                                                        childWidget = themeButton(
+                                                            themeChange:
+                                                                themeChangeProvider,
+                                                            lightColorScheme:
+                                                                purpleLightColorScheme,
+                                                            darkColorScheme:
+                                                                purpleDarkColorScheme);
+                                                        break;
+                                                      case "Baige":
+                                                        childWidget = themeButton(
+                                                            themeChange:
+                                                                themeChangeProvider,
+                                                            lightColorScheme:
+                                                                baigeLightColorScheme,
+                                                            darkColorScheme:
+                                                                baigeDarkColorScheme);
+                                                        break;
+                                                      case "Red":
+                                                        childWidget = themeButton(
+                                                            themeChange:
+                                                                themeChangeProvider,
+                                                            lightColorScheme:
+                                                                redLightColorScheme,
+                                                            darkColorScheme:
+                                                                redDarkColorScheme);
+                                                        break;
+                                                      case "Blue":
+                                                        childWidget = themeButton(
+                                                            themeChange:
+                                                                themeChangeProvider,
+                                                            lightColorScheme:
+                                                                blueLightColorScheme,
+                                                            darkColorScheme:
+                                                                blueDarkColorScheme);
+                                                        break;
+                                                      case "Grey":
+                                                        childWidget = themeButton(
+                                                            themeChange:
+                                                                themeChangeProvider,
+                                                            lightColorScheme:
+                                                                greyLightColorScheme,
+                                                            darkColorScheme:
+                                                                greyDarkColorScheme);
+                                                        break;
+                                                      case "Green":
+                                                        childWidget = themeButton(
+                                                            themeChange:
+                                                                themeChangeProvider,
+                                                            lightColorScheme:
+                                                                greenLightColorScheme,
+                                                            darkColorScheme:
+                                                                greenDarkColorScheme);
+                                                        break;
+                                                      case "Orange":
+                                                        childWidget = themeButton(
+                                                            themeChange:
+                                                                themeChangeProvider,
+                                                            lightColorScheme:
+                                                                orangeLightColorScheme,
+                                                            darkColorScheme:
+                                                                orangeDarkColorScheme);
+                                                        break;
+                                                      case "Device":
+                                                        childWidget = Container(
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: themeChangeProvider
+                                                                    .darkTheme
+                                                                ? Colors
+                                                                    .grey[800]
+                                                                : Colors
+                                                                    .grey[200],
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12),
+                                                          ),
+                                                          child:
+                                                              FloatingActionButton
+                                                                  .small(
+                                                            heroTag:
+                                                                "deviceTheme",
+                                                            elevation: 0,
+                                                            onPressed: null,
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .transparent,
+                                                            foregroundColor:
+                                                                themeChangeProvider
+                                                                        .darkTheme
+                                                                    ? Colors
+                                                                        .white
+                                                                    : Colors
+                                                                        .black,
+                                                            child: const Icon(Icons
+                                                                .phone_android),
+                                                          ),
+                                                        );
+                                                        break;
+                                                      default:
+                                                        childWidget =
+                                                            const SizedBox();
+                                                    }
+
+                                                    return GestureDetector(
+                                                      onTap: () {
+                                                        setState(() {
+                                                          for (int buttonIndex =
+                                                                  0;
+                                                              buttonIndex <
+                                                                  isSelected
+                                                                      .length;
+                                                              buttonIndex++) {
+                                                            if (buttonIndex ==
+                                                                index) {
+                                                              isSelected[
+                                                                      buttonIndex] =
+                                                                  true;
+                                                              colorChangeProvider
+                                                                      .colorTheme =
+                                                                  buttonIndex;
+                                                            } else {
+                                                              isSelected[
+                                                                      buttonIndex] =
+                                                                  false;
+                                                            }
+                                                          }
+                                                        });
+                                                      },
+                                                      child: Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(16),
+                                                          border: Border.all(
+                                                            color: selected
+                                                                ? Theme.of(
+                                                                        context)
+                                                                    .colorScheme
+                                                                    .primary
+                                                                : Colors
+                                                                    .transparent,
+                                                            width: 3,
+                                                          ),
+                                                        ),
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(2),
+                                                        child: childWidget,
+                                                      ),
+                                                    );
+                                                  });
+
+                                                  return Column(
+                                                    children: [
+                                                      Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        children: buttons
+                                                            .sublist(0, 4)
+                                                            .map((b) => Padding(
+                                                                padding: const EdgeInsets
+                                                                    .symmetric(
+                                                                    horizontal:
+                                                                        6),
+                                                                child: b))
+                                                            .toList(),
+                                                      ),
+                                                      const SizedBox(
+                                                          height: 12),
+                                                      Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        children: buttons
+                                                            .sublist(4, 8)
+                                                            .map((b) => Padding(
+                                                                padding: const EdgeInsets
+                                                                    .symmetric(
+                                                                    horizontal:
+                                                                        6),
+                                                                child: b))
+                                                            .toList(),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Card(
+                                    elevation: 0,
+                                    color:
+                                        Theme.of(context).colorScheme.surface,
+                                    clipBehavior: Clip.antiAlias,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "حجم الخط",
+                                            style: TextStyle(
+                                                fontSize: themeChangeProvider
+                                                    .fontSize),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Center(
+                                            child: Slider(
+                                              value:
+                                                  themeChangeProvider.fontSize,
+                                              max: 36,
+                                              min: 20,
+                                              divisions: 7,
+                                              label: themeChangeProvider
+                                                  .fontSize
+                                                  .round()
+                                                  .toString(),
+                                              onChanged: (double value) {
+                                                setState(() {
+                                                  themeChangeProvider.fontSize =
+                                                      value;
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        });
+                    break;
+                }
+              },
+              itemBuilder: (BuildContext context) => [
+                PopupMenuItem<String>(
+                  value: 'appearance',
+                  child: ListTile(
+                      leading: const Icon(Icons.palette_outlined, size: 20),
+                      title: Text("المظهر"), // Use your localized string
+                      contentPadding: EdgeInsets.zero,
+                      titleTextStyle: TextStyle(
+                          fontFamily: "Rubik",
+                          color: Theme.of(context).colorScheme.onSurface)),
+                ),
+              ],
+            ),
+            // Padding(
+            //   padding: const EdgeInsets.all(8.0),
+            //   child: SegmentedButton(
+            //       onSelectionChanged: (Set<ViewMode> value) {
+            //         setState(() {
+            //           selected = {value.first};
+            //         });
+            //       },
+            //       showSelectedIcon: false,
+            //       segments: [
+            //         ButtonSegment(
+            //             icon: const Icon(Icons.list_outlined),
+            //             value: ViewMode.list),
+            //         ButtonSegment(
+            //             icon: const Icon(Icons.grid_view_outlined),
+            //             value: ViewMode.grid),
+            //       ],
+            //       selected: selected),
+            // )
           ],
           backgroundColor: Theme.of(context).colorScheme.surface,
-          leading: IconButton.outlined(
-              icon: const Icon(Icons.settings_outlined),
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return const SettingsPage();
-                }));
-              }),
           centerTitle: true,
           elevation: 0,
           title: Text("عداد التسبيح",
@@ -287,253 +625,381 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 );
               } else {
-                return PageTransitionSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  reverse: selected.contains(ViewMode.list),
-                  transitionBuilder: (child, animation, secondaryAnimation) {
-                    return SharedAxisTransition(
-                      animation: animation,
-                      secondaryAnimation: secondaryAnimation,
-                      transitionType: SharedAxisTransitionType.horizontal,
-                      child: child,
-                    );
-                  },
-                  child: selected.contains(ViewMode.list)
-                      ? ListView.separated(
-                          separatorBuilder: (_, __) => const Divider(),
-                          itemCount: box.values.length,
-                          itemBuilder: (context, i) {
-                            var prayer = box.getAt(i)!;
-                            return Slidable(
-                              startActionPane: ActionPane(
-                                motion: const ScrollMotion(),
-                                children: [
-                                  SlidableAction(
-                                    onPressed: (context) async {
-                                      // show a confirmation dialog
-                                      var result = await showDialog(
-                                          context: context,
-                                          builder: (context) {
-                                            return AlertDialog(
-                                              title: const Text("تأكيد الحذف"),
-                                              content: const Text(
-                                                  "هل أنت متأكد من حذف هذا العداد؟"),
-                                              actions: [
-                                                TextButton(
-                                                    onPressed: () {
-                                                      Navigator.pop(
-                                                          context, false);
-                                                    },
-                                                    child: const Text("إلغاء")),
-                                                TextButton(
-                                                    onPressed: () {
-                                                      Navigator.pop(
-                                                          context, true);
-                                                    },
-                                                    child: const Text("حذف")),
-                                              ],
-                                            );
-                                          });
-
-                                      if (result == true) {
-                                        await Hive.box<Prayer>(boxName)
-                                            .delete(prayer.name);
-                                        setState(() {});
-                                      }
-
-                                      // await Hive.box<Prayer>(boxName)
-                                      //     .delete(prayer.name);
-                                      // setState(() {});
-                                    },
-                                    backgroundColor: Theme.of(context)
-                                        .colorScheme
-                                        .errorContainer,
-                                    foregroundColor:
-                                        Theme.of(context).colorScheme.onSurface,
-                                    icon: Icons.delete,
-                                    label: 'حذف',
-                                  ),
-                                  SlidableAction(
-                                    onPressed: (context) {},
-                                    backgroundColor: Theme.of(context)
-                                        .colorScheme
-                                        .primaryContainer,
-                                    foregroundColor: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimaryContainer,
-                                    icon: Icons.edit,
-                                    label: 'تعديل',
-                                  ),
-                                ],
-                              ),
-                              key: ValueKey(i),
-                              child: ListTile(
-                                title: Text(
-                                  prayer.name,
-                                  style: const TextStyle(fontSize: 25),
-                                ),
-                                onTap: () {
-                                  Navigator.push(context,
-                                      MaterialPageRoute(builder: (context) {
-                                    return CounterDetailsPage(prayer: prayer);
-                                  }));
-                                },
-                                trailing: CircleAvatar(
-                                    radius: 25,
-                                    backgroundColor:
-                                        Theme.of(context).colorScheme.primary,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(10),
-                                      child: Text(
-                                        prayer.numberOfCompletedPrayers > 0
-                                            ? prayer.numberOfCompletedPrayers
-                                                .toString()
-                                            : "${prayer.finished}/${prayer.total}",
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontFeatures:
-                                              prayer.numberOfCompletedPrayers >
-                                                      0
-                                                  ? []
-                                                  : [FontFeature.fractions()],
-                                          fontFamily: Theme.of(context)
-                                              .textTheme
-                                              .labelSmall!
-                                              .fontFamily,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onPrimary,
-                                          fontSize: 25,
-                                        ),
-                                      ),
-                                    )),
-                              ),
-                            );
-                          },
-                        )
-                      : GridView.builder(
-                          // build a mini counter for each prayer
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2),
-                          itemCount: box.values.length,
-                          itemBuilder: (context, i) {
-                            var prayer = box.getAt(i)!;
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.push(context,
-                                    MaterialPageRoute(builder: (context) {
-                                  return CounterDetailsPage(prayer: prayer);
-                                }));
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Card.outlined(
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30)),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(30),
-                                        border: Border.all(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurface)),
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 10, right: 10),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                Text(
-                                                  prayer.name,
-                                                  style: const TextStyle(
-                                                      fontSize: 25),
-                                                ),
-                                                IconButton.outlined(
-                                                  icon: Text(
-                                                      prayer
-                                                          .numberOfCompletedPrayers
-                                                          .toString(),
-                                                      style: const TextStyle(
-                                                          fontSize: 15)),
-                                                  onPressed: () {},
-                                                ),
-                                              ]),
-                                          const SizedBox(height: 10),
-                                          SizedBox(
-                                            height: 80,
-                                            width: 140,
-                                            child: FilledButton(
-                                              style: ButtonStyle(
-                                                  shape: WidgetStateProperty.all<
-                                                          RoundedRectangleBorder>(
-                                                      RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      20)))),
-                                              child: Text(
-                                                  "${prayer.total}/${prayer.finished}",
-                                                  style: const TextStyle(
-                                                      fontFeatures: [
-                                                        FontFeature.fractions()
-                                                      ],
-                                                      fontSize: 35)),
-                                              onPressed: () async {
-                                                if (prayer.finished !=
-                                                    prayer.total) {
-                                                  prayer.finished += 1;
-                                                  await Hive.box<Prayer>(
-                                                          boxName)
-                                                      .put(
-                                                          prayer.name,
-                                                          Prayer(
-                                                            prayer.name,
-                                                            prayer.total,
-                                                            prayer.finished,
-                                                            prayer.content,
-                                                            numberOfCompletedPrayers:
-                                                                prayer
-                                                                    .numberOfCompletedPrayers,
-                                                          ))
-                                                      .then((value) =>
-                                                          setState(() {}));
-                                                } else {
-                                                  int completedPrayers = prayer
-                                                      .numberOfCompletedPrayers += 1;
-                                                  prayer.finished = 0;
-                                                  await Hive.box<Prayer>(boxName).put(
-                                                      prayer.name,
-                                                      Prayer(
-                                                          prayer.name,
-                                                          prayer.total,
-                                                          prayer.finished,
-                                                          prayer.content,
-                                                          numberOfCompletedPrayers:
-                                                              completedPrayers));
-                                                  setState(() {});
-                                                }
-                                              },
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                );
+                return _buildPrayerTab(themeChangeProvider);
               }
             }),
+      ),
+    );
+  }
+
+  Widget _buildPrayerTab(TheThemeProvider themeChangeProvider) {
+    return ValueListenableBuilder<Box<Prayer>>(
+      valueListenable: Hive.box<Prayer>(boxName).listenable(),
+      builder: (context, Box<Prayer> box, widget) {
+        // Filtering based on person if your Prayer model has that field
+        final items = box.values.toList();
+
+        // if (items.isEmpty) {
+        //   return _buildEmptyState(localizations, themeChangeProvider, context, "prayers", themeChangeProvider);
+        // }
+
+        return Column(
+          children: [
+            Expanded(
+              child: selected.contains(ViewMode.grid)
+                  ? GridView.builder(
+                      padding: const EdgeInsets.all(16),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: 0.85,
+                      ),
+                      itemCount: items.length,
+                      itemBuilder: (context, i) => _buildGridCard(
+                        context,
+                        items[i],
+                        box,
+                        i,
+                        themeChangeProvider,
+                        isFasting: false, // This is for prayers
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      itemCount: items.length,
+                      itemBuilder: (context, i) => _buildPrayerListCard(
+                          context, items[i], box, i, themeChangeProvider),
+                    ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPrayerListCard(BuildContext context, Prayer prayer,
+      Box<Prayer> box, int index, themeChangeProvider) {
+    final theme = Theme.of(context);
+    final bool isCompleted = prayer.finished >= prayer.total;
+
+    return Slidable(
+      key: ValueKey(prayer.name),
+      startActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        children: [
+          SlidableAction(
+            onPressed: (context) async {
+              bool? result = await _showDeleteConfirmation(context);
+              if (result == true) {
+                await box.deleteAt(index);
+                setState(() {});
+              }
+            },
+            backgroundColor: theme.colorScheme.errorContainer,
+            foregroundColor: theme.colorScheme.onErrorContainer,
+            icon: Icons.delete,
+            label: 'حذف',
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+            return CounterDetailsPage(prayer: prayer);
+          }));
+        },
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isCompleted
+                ? theme.colorScheme.onSurface.withOpacity(0.05)
+                : theme.colorScheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(20),
+            border: isCompleted
+                ? Border.all(color: theme.colorScheme.primary.withOpacity(0.2))
+                : null,
+          ),
+          child: Row(
+            children: [
+              // Minus Button logic
+              IconButton(
+                onPressed: () => _handleDecrement(prayer, box, index),
+                icon: Icon(Icons.remove_circle_outline,
+                    color: theme.colorScheme.outline),
+              ),
+
+              // Name and Cycle Count
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      prayer.name,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    if (prayer.numberOfCompletedPrayers > 0)
+                      Text(
+                        "الدورات المكتملة: ${prayer.numberOfCompletedPrayers}",
+                        style: TextStyle(
+                            fontSize: 12, color: theme.colorScheme.primary),
+                      ),
+                  ],
+                ),
+              ),
+
+              // Increment Button
+              if (!isCompleted)
+                TextButton(
+                  onPressed: () => _handleIncrement(prayer, box, index),
+                  style: TextButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primaryContainer,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(
+                    "تم",
+                    style: TextStyle(
+                        color: theme.colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+
+              const SizedBox(width: 12),
+
+              // Modern Counter Box
+              Container(
+                width: 80,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Opacity(
+                      opacity: isCompleted ? 0.2 : 1.0,
+                      child: Text(
+                        "${prayer.finished}/${prayer.total}",
+                        style: TextStyle(
+                          color: theme.colorScheme.surface,
+                          fontSize: 24,
+                          fontFamily: 'Ubuntu Mono',
+                          fontFeatures: const [FontFeature.fractions()],
+                        ),
+                      ),
+                    ),
+                    if (isCompleted)
+                      Icon(Icons.check_circle,
+                          color: theme.colorScheme.primaryContainer, size: 35),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGridCard(BuildContext context, Prayer prayer, Box<Prayer> box,
+      int index, themeChangeProvider,
+      {bool isFasting = false}) {
+    final theme = Theme.of(context);
+    final bool isCompleted = prayer.finished >= prayer.total;
+
+    return Container(
+      decoration: BoxDecoration(
+        // Switch to Dark Background only if completed
+        color: isCompleted
+            ? theme.colorScheme.onSurface.withValues(alpha: 0.95)
+            : theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(25),
+        // boxShadow: [
+        //   BoxShadow(
+        //       color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+        //       blurRadius: 5)
+        // ],
+      ),
+      child: Stack(
+        children: [
+          // 1. ORIGINAL CONTENT (Faded ONLY if completed)
+          Opacity(
+            opacity: isCompleted ? 0.05 : 1.0,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          prayer.name,
+                          style: const TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.bold),
+                        ),
+                        IconButton(
+                          onPressed: () => confirmationAlert(
+                              context, prayer, box, index, false),
+                          icon: Icon(Icons.remove_circle_outline,
+                              color: theme.colorScheme.outline, size: 20),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 150,
+                    height: 50,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.90),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Text(
+                      "${prayer.finished}/${prayer.total}",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: theme.colorScheme.surface,
+                        fontSize: 27,
+                        height: 1,
+                        fontFamily: 'Ubuntu Mono',
+                        fontFeatures: <FontFeature>[
+                          FontFeature.fractions(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () =>
+                        confirmationAlert(context, prayer, box, index, true),
+                    style: TextButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      minimumSize: const Size(160, 40),
+                    ),
+                    child: Text(
+                      "+",
+                      style: TextStyle(
+                          fontSize: 15,
+                          color: theme.colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // 2. SUCCESS OVERLAY (Only visible if completed)
+          if (isCompleted)
+            Positioned.fill(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    // Sharp Title and White Minus Icon Row
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            prayer.name,
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.surface,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => confirmationAlert(
+                                context, prayer, box, index, false),
+                            icon: Icon(
+                              Icons.remove_circle_outline,
+                              size: 20,
+                              color: theme.colorScheme.surface
+                                  .withValues(alpha: 0.85),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Centered Big Checkmark
+                    Expanded(
+                      child: Center(
+                        child: Icon(
+                          Icons.check_circle,
+                          color: theme.colorScheme.primaryContainer,
+                          size: 85,
+                          shadows: [
+                            Shadow(
+                              color: theme.colorScheme.primaryContainer
+                                  .withValues(alpha: 0.4),
+                              blurRadius: 15,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+// Logic Helpers to keep the UI code clean
+  void _handleIncrement(Prayer prayer, Box<Prayer> box, int index) async {
+    if (prayer.finished < prayer.total) {
+      prayer.finished += 1;
+      // If it reaches total after this increment, we can handle logic here
+    } else {
+      // Logic for "Cycling" if needed
+      prayer.numberOfCompletedPrayers += 1;
+      prayer.finished = 0;
+    }
+    await box.putAt(index, prayer);
+  }
+
+  void _handleDecrement(Prayer prayer, Box<Prayer> box, int index) async {
+    if (prayer.finished > 0) {
+      prayer.finished -= 1;
+      await box.putAt(index, prayer);
+    }
+  }
+
+  Future<bool?> _showDeleteConfirmation(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("تأكيد الحذف"),
+        content: const Text("هل أنت متأكد من حذف هذا العداد؟"),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("إلغاء")),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("حذف")),
+        ],
       ),
     );
   }
