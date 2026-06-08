@@ -3,6 +3,7 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:prayers_counters_app/add_counter_page.dart';
 import 'package:prayers_counters_app/color_schemes.g.dart';
 import 'package:prayers_counters_app/counter_details_page.dart';
 import 'package:prayers_counters_app/prayers_model.dart';
@@ -56,6 +57,22 @@ class _MyAppState extends State<MyApp> {
         await themeChangeProvider.preference.getFontSize();
     themeChangeProvider.darkTheme =
         await themeChangeProvider.preference.getTheme();
+    themeChangeProvider.counterFontSize =
+        await themeChangeProvider.preference.getCounterFontSize();
+    themeChangeProvider.enableAnimations =
+        await themeChangeProvider.preference.getAnimationsTheme();
+    themeChangeProvider.vibrateOnTap =
+        await themeChangeProvider.preference.getVibrateOnTap();
+    themeChangeProvider.vibrateOnComplete =
+        await themeChangeProvider.preference.getVibrateOnComplete();
+    themeChangeProvider.confirmReset =
+        await themeChangeProvider.preference.getConfirmReset();
+    themeChangeProvider.confirmIncrement =
+        await themeChangeProvider.preference.getConfirmIncrement();
+    themeChangeProvider.confirmDecrement =
+        await themeChangeProvider.preference.getConfirmDecrement();
+    themeChangeProvider.language =
+        await themeChangeProvider.preference.getUILanguage();
   }
 
   void getCurrentColorTheme() async {
@@ -123,8 +140,11 @@ class _MyAppState extends State<MyApp> {
                     : ThemeMode.light,
                 initialRoute: "/",
                 routes: {
-                  "/": (context) => const Directionality(
-                      textDirection: TextDirection.rtl, child: MyHomePage()),
+                  "/": (context) => Directionality(
+                      textDirection: themeChangeProvider.language == 'ar'
+                          ? TextDirection.rtl
+                          : TextDirection.ltr,
+                      child: const MyHomePage()),
                 },
               ),
             ),
@@ -179,326 +199,18 @@ class _MyHomePageState extends State<MyHomePage> {
               onSelected: (String value) {
                 switch (value) {
                   case 'appearance':
-                    showModalBottomSheet(
-                        isScrollControlled: true,
-                        context: context,
-                        builder: (context) {
-                          return Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: Scaffold(
-                              backgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainer,
-                              appBar: AppBar(
-                                  backgroundColor: Colors.transparent,
-                                  leading: IconButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      icon: const Icon(Icons.close)),
-                                  centerTitle: true,
-                                  title: Text(
-                                    "المظهر",
-                                    style: TextStyle(
-                                        fontSize:
-                                            themeChangeProvider.fontSize + 5),
-                                  )),
-                              body: ListView(
-                                padding: const EdgeInsets.all(16),
-                                children: [
-                                  Card(
-                                    elevation: 0,
-                                    color:
-                                        Theme.of(context).colorScheme.surface,
-                                    clipBehavior: Clip.antiAlias,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        SwitchListTile(
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 16),
-                                            title: Text("الوضع الداكن",
-                                                style: TextStyle(
-                                                    fontSize:
-                                                        themeChangeProvider
-                                                            .fontSize)),
-                                            value:
-                                                themeChangeProvider.darkTheme,
-                                            onChanged: (bool value) {
-                                              themeChangeProvider.darkTheme =
-                                                  value;
-                                            }),
-                                        const Divider(height: 1),
-                                        Padding(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "السمات",
-                                                style: TextStyle(
-                                                    fontSize:
-                                                        themeChangeProvider
-                                                            .fontSize),
-                                              ),
-                                              const SizedBox(height: 16),
-                                              Builder(
-                                                builder: (context) {
-                                                  final buttons = List.generate(
-                                                      colorSchemes.length,
-                                                      (index) {
-                                                    final bool selected =
-                                                        isSelected[index];
-                                                    Widget childWidget;
-                                                    switch (
-                                                        colorSchemes[index]) {
-                                                      case "Purple":
-                                                        childWidget = themeButton(
-                                                            themeChange:
-                                                                themeChangeProvider,
-                                                            lightColorScheme:
-                                                                purpleLightColorScheme,
-                                                            darkColorScheme:
-                                                                purpleDarkColorScheme);
-                                                        break;
-                                                      case "Baige":
-                                                        childWidget = themeButton(
-                                                            themeChange:
-                                                                themeChangeProvider,
-                                                            lightColorScheme:
-                                                                baigeLightColorScheme,
-                                                            darkColorScheme:
-                                                                baigeDarkColorScheme);
-                                                        break;
-                                                      case "Red":
-                                                        childWidget = themeButton(
-                                                            themeChange:
-                                                                themeChangeProvider,
-                                                            lightColorScheme:
-                                                                redLightColorScheme,
-                                                            darkColorScheme:
-                                                                redDarkColorScheme);
-                                                        break;
-                                                      case "Blue":
-                                                        childWidget = themeButton(
-                                                            themeChange:
-                                                                themeChangeProvider,
-                                                            lightColorScheme:
-                                                                blueLightColorScheme,
-                                                            darkColorScheme:
-                                                                blueDarkColorScheme);
-                                                        break;
-                                                      case "Grey":
-                                                        childWidget = themeButton(
-                                                            themeChange:
-                                                                themeChangeProvider,
-                                                            lightColorScheme:
-                                                                greyLightColorScheme,
-                                                            darkColorScheme:
-                                                                greyDarkColorScheme);
-                                                        break;
-                                                      case "Green":
-                                                        childWidget = themeButton(
-                                                            themeChange:
-                                                                themeChangeProvider,
-                                                            lightColorScheme:
-                                                                greenLightColorScheme,
-                                                            darkColorScheme:
-                                                                greenDarkColorScheme);
-                                                        break;
-                                                      case "Orange":
-                                                        childWidget = themeButton(
-                                                            themeChange:
-                                                                themeChangeProvider,
-                                                            lightColorScheme:
-                                                                orangeLightColorScheme,
-                                                            darkColorScheme:
-                                                                orangeDarkColorScheme);
-                                                        break;
-                                                      case "Device":
-                                                        childWidget = Container(
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: themeChangeProvider
-                                                                    .darkTheme
-                                                                ? Colors
-                                                                    .grey[800]
-                                                                : Colors
-                                                                    .grey[200],
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        12),
-                                                          ),
-                                                          child:
-                                                              FloatingActionButton
-                                                                  .small(
-                                                            heroTag:
-                                                                "deviceTheme",
-                                                            elevation: 0,
-                                                            onPressed: null,
-                                                            backgroundColor:
-                                                                Colors
-                                                                    .transparent,
-                                                            foregroundColor:
-                                                                themeChangeProvider
-                                                                        .darkTheme
-                                                                    ? Colors
-                                                                        .white
-                                                                    : Colors
-                                                                        .black,
-                                                            child: const Icon(Icons
-                                                                .phone_android),
-                                                          ),
-                                                        );
-                                                        break;
-                                                      default:
-                                                        childWidget =
-                                                            const SizedBox();
-                                                    }
-
-                                                    return GestureDetector(
-                                                      onTap: () {
-                                                        setState(() {
-                                                          for (int buttonIndex =
-                                                                  0;
-                                                              buttonIndex <
-                                                                  isSelected
-                                                                      .length;
-                                                              buttonIndex++) {
-                                                            if (buttonIndex ==
-                                                                index) {
-                                                              isSelected[
-                                                                      buttonIndex] =
-                                                                  true;
-                                                              colorChangeProvider
-                                                                      .colorTheme =
-                                                                  buttonIndex;
-                                                            } else {
-                                                              isSelected[
-                                                                      buttonIndex] =
-                                                                  false;
-                                                            }
-                                                          }
-                                                        });
-                                                      },
-                                                      child: Container(
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(16),
-                                                          border: Border.all(
-                                                            color: selected
-                                                                ? Theme.of(
-                                                                        context)
-                                                                    .colorScheme
-                                                                    .primary
-                                                                : Colors
-                                                                    .transparent,
-                                                            width: 3,
-                                                          ),
-                                                        ),
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(2),
-                                                        child: childWidget,
-                                                      ),
-                                                    );
-                                                  });
-
-                                                  return Column(
-                                                    children: [
-                                                      Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .center,
-                                                        children: buttons
-                                                            .sublist(0, 4)
-                                                            .map((b) => Padding(
-                                                                padding: const EdgeInsets
-                                                                    .symmetric(
-                                                                    horizontal:
-                                                                        6),
-                                                                child: b))
-                                                            .toList(),
-                                                      ),
-                                                      const SizedBox(
-                                                          height: 12),
-                                                      Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .center,
-                                                        children: buttons
-                                                            .sublist(4, 8)
-                                                            .map((b) => Padding(
-                                                                padding: const EdgeInsets
-                                                                    .symmetric(
-                                                                    horizontal:
-                                                                        6),
-                                                                child: b))
-                                                            .toList(),
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Card(
-                                    elevation: 0,
-                                    color:
-                                        Theme.of(context).colorScheme.surface,
-                                    clipBehavior: Clip.antiAlias,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            "حجم الخط",
-                                            style: TextStyle(
-                                                fontSize: themeChangeProvider
-                                                    .fontSize),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Center(
-                                            child: Slider(
-                                              value:
-                                                  themeChangeProvider.fontSize,
-                                              max: 36,
-                                              min: 20,
-                                              divisions: 7,
-                                              label: themeChangeProvider
-                                                  .fontSize
-                                                  .round()
-                                                  .toString(),
-                                              onChanged: (double value) {
-                                                setState(() {
-                                                  themeChangeProvider.fontSize =
-                                                      value;
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        });
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                const SettingsPage(appearanceOnly: true)));
+                    break;
+                  case 'settings':
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                const SettingsPage(appearanceOnly: false)));
                     break;
                 }
               },
@@ -507,7 +219,21 @@ class _MyHomePageState extends State<MyHomePage> {
                   value: 'appearance',
                   child: ListTile(
                       leading: const Icon(Icons.palette_outlined, size: 20),
-                      title: Text("المظهر"), // Use your localized string
+                      title: Text(themeChangeProvider.language == 'ar'
+                          ? "المظهر"
+                          : "Appearance"),
+                      contentPadding: EdgeInsets.zero,
+                      titleTextStyle: TextStyle(
+                          fontFamily: "Rubik",
+                          color: Theme.of(context).colorScheme.onSurface)),
+                ),
+                PopupMenuItem<String>(
+                  value: 'settings',
+                  child: ListTile(
+                      leading: const Icon(Icons.settings_outlined, size: 20),
+                      title: Text(themeChangeProvider.language == 'ar'
+                          ? "الإعدادات"
+                          : "Settings"),
                       contentPadding: EdgeInsets.zero,
                       titleTextStyle: TextStyle(
                           fontFamily: "Rubik",
@@ -515,10 +241,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
-            // Padding(
-            //   padding: const EdgeInsets.all(8.0),
-            //   child: SegmentedButton(
-            //       onSelectionChanged: (Set<ViewMode> value) {
             //         setState(() {
             //           selected = {value.first};
             //         });
@@ -538,14 +260,28 @@ class _MyHomePageState extends State<MyHomePage> {
           backgroundColor: Theme.of(context).colorScheme.surface,
           centerTitle: true,
           elevation: 0,
-          title: Text("عداد التسبيح",
-              style: TextStyle(fontFamily: "Lateef", fontSize: 40))),
-      floatingActionButton: FloatingActionButton(
-        elevation: 0.5,
-        heroTag: 'IncreaseFAB',
-        child: Icon(Icons.add),
-        onPressed: () {
-          createNewDuhaDialog(context);
+          title: Text(
+              themeChangeProvider.language == 'ar'
+                  ? "عداد التسبيح"
+                  : "Tasbih Counter",
+              style: const TextStyle(fontFamily: "Lateef", fontSize: 40))),
+      floatingActionButton: ValueListenableBuilder<Box<Prayer>>(
+        valueListenable: Hive.box<Prayer>(boxName).listenable(),
+        builder: (context, box, _) {
+          if (box.isEmpty) return const SizedBox.shrink();
+          return FloatingActionButton(
+            elevation: 0.5,
+            heroTag: 'IncreaseFAB',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AddCounterPage(),
+                ),
+              );
+            },
+            child: const Icon(Icons.add),
+          );
         },
       ),
       // sliver app bar
@@ -611,16 +347,57 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       // const Image(image: AssetImage('images/kaaba_3d.png')),
                       Text(
-                        "عداد التسبيح الإلكتروني",
-                        style: TextStyle(
+                        themeChangeProvider.language == 'ar'
+                            ? "عداد التسبيح الإلكتروني"
+                            : "Electronic Tasbih Counter",
+                        style: const TextStyle(
                             letterSpacing: 0,
                             fontSize: 35,
                             fontFamily: "Lateef"),
                       ),
-
-                      const SizedBox(
-                        height: 30,
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                        child: Text(
+                          themeChangeProvider.language == 'ar'
+                              ? "اضغط على الزر أدناه\nلإضافة عداد جديد والبدء بالتسبيح."
+                              : "Tap the button below\nto add a new counter and start tasbih.",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: themeChangeProvider.fontSize * 0.55,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            height: 1.4,
+                          ),
+                        ),
                       ),
+                      const SizedBox(height: 24),
+                      FilledButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AddCounterPage(),
+                            ),
+                          );
+                        },
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: Text(
+                          themeChangeProvider.language == 'ar'
+                              ? "إضافة عداد جديد"
+                              : "Add New Counter",
+                          style: TextStyle(
+                            fontSize: themeChangeProvider.fontSize * 0.65,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
                     ],
                   ),
                 );
@@ -636,46 +413,36 @@ class _MyHomePageState extends State<MyHomePage> {
     return ValueListenableBuilder<Box<Prayer>>(
       valueListenable: Hive.box<Prayer>(boxName).listenable(),
       builder: (context, Box<Prayer> box, widget) {
-        // Filtering based on person if your Prayer model has that field
         final items = box.values.toList();
+        final isGridView = MediaQuery.of(context).size.width > 800 ||
+            selected.contains(ViewMode.grid);
 
-        // if (items.isEmpty) {
-        //   return _buildEmptyState(localizations, themeChangeProvider, context, "prayers", themeChangeProvider);
-        // }
-
-        return Column(
-          children: [
-            Expanded(
-              child: selected.contains(ViewMode.grid)
-                  ? GridView.builder(
-                      padding: const EdgeInsets.all(16),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                        childAspectRatio: 0.85,
-                      ),
-                      itemCount: items.length,
-                      itemBuilder: (context, i) => _buildGridCard(
-                        context,
-                        items[i],
-                        box,
-                        i,
-                        themeChangeProvider,
-                        isFasting: false, // This is for prayers
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      itemCount: items.length,
-                      itemBuilder: (context, i) => _buildPrayerListCard(
-                          context, items[i], box, i, themeChangeProvider),
-                    ),
-            ),
-          ],
-        );
+        return isGridView
+            ? GridView.builder(
+                padding: const EdgeInsets.all(16),
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 280,
+                  mainAxisExtent: 200,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                ),
+                itemCount: items.length,
+                itemBuilder: (context, i) => _buildGridCard(
+                  context,
+                  items[i],
+                  box,
+                  i,
+                  themeChangeProvider,
+                  isFasting: false,
+                ),
+              )
+            : ListView.builder(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                itemCount: items.length,
+                itemBuilder: (context, i) => _buildPrayerListCard(
+                    context, items[i], box, i, themeChangeProvider),
+              );
       },
     );
   }
@@ -727,7 +494,13 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               // Minus Button logic
               IconButton(
-                onPressed: () => _handleDecrement(prayer, box, index),
+                onPressed: () {
+                  if (themeChangeProvider.confirmDecrement) {
+                    confirmationAlert(context, prayer, box, index, false);
+                  } else {
+                    _handleDecrement(prayer, box, index);
+                  }
+                },
                 icon: Icon(Icons.remove_circle_outline,
                     color: theme.colorScheme.outline),
               ),
@@ -747,7 +520,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     if (prayer.numberOfCompletedPrayers > 0)
                       Text(
-                        "الدورات المكتملة: ${prayer.numberOfCompletedPrayers}",
+                        themeChangeProvider.language == 'ar'
+                            ? "الدورات المكتملة: ${prayer.numberOfCompletedPrayers}"
+                            : "Completed Cycles: ${prayer.numberOfCompletedPrayers}",
                         style: TextStyle(
                             fontSize: 12, color: theme.colorScheme.primary),
                       ),
@@ -758,14 +533,20 @@ class _MyHomePageState extends State<MyHomePage> {
               // Increment Button
               if (!isCompleted)
                 TextButton(
-                  onPressed: () => _handleIncrement(prayer, box, index),
+                  onPressed: () {
+                    if (themeChangeProvider.confirmIncrement) {
+                      confirmationAlert(context, prayer, box, index, true);
+                    } else {
+                      _handleIncrement(prayer, box, index);
+                    }
+                  },
                   style: TextButton.styleFrom(
                     backgroundColor: theme.colorScheme.primaryContainer,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
                   child: Text(
-                    "تم",
+                    themeChangeProvider.language == 'ar' ? "تسبيح" : "Tasbih",
                     style: TextStyle(
                         color: theme.colorScheme.onPrimaryContainer,
                         fontWeight: FontWeight.bold),
@@ -844,14 +625,22 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          prayer.name,
-                          style: const TextStyle(
-                              fontSize: 22, fontWeight: FontWeight.bold),
+                        Expanded(
+                          child: Text(
+                            prayer.name,
+                            style: const TextStyle(
+                                fontSize: 22, fontWeight: FontWeight.bold),
+                          ),
                         ),
                         IconButton(
-                          onPressed: () => confirmationAlert(
-                              context, prayer, box, index, false),
+                          onPressed: () {
+                            if (themeChangeProvider.confirmDecrement) {
+                              confirmationAlert(
+                                  context, prayer, box, index, false);
+                            } else {
+                              _handleDecrement(prayer, box, index);
+                            }
+                          },
                           icon: Icon(Icons.remove_circle_outline,
                               color: theme.colorScheme.outline, size: 20),
                         ),
@@ -884,8 +673,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   const SizedBox(height: 8),
                   TextButton(
-                    onPressed: () =>
-                        confirmationAlert(context, prayer, box, index, true),
+                    onPressed: () {
+                      if (themeChangeProvider.confirmIncrement) {
+                        confirmationAlert(context, prayer, box, index, true);
+                      } else {
+                        _handleIncrement(prayer, box, index);
+                      }
+                    },
                     style: TextButton.styleFrom(
                       backgroundColor: theme.colorScheme.primaryContainer,
                       shape: RoundedRectangleBorder(
@@ -893,7 +687,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       minimumSize: const Size(160, 40),
                     ),
                     child: Text(
-                      "+",
+                      themeChangeProvider.language == 'ar' ? "تسبيح" : "Tasbih",
                       style: TextStyle(
                           fontSize: 15,
                           color: theme.colorScheme.onPrimaryContainer,
@@ -918,12 +712,14 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            prayer.name,
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.surface,
+                          Expanded(
+                            child: Text(
+                              prayer.name,
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.surface,
+                              ),
                             ),
                           ),
                           IconButton(
@@ -1004,124 +800,45 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Future<dynamic> createNewDuhaDialog(BuildContext context, {int? id}) async {
-    var titleTextController = TextEditingController();
-    var contentTextController = TextEditingController();
-    var limitTextController = TextEditingController();
 
-    Prayer? prayer;
-
-    if (id != null) {
-      final box = await Hive.box<Prayer>(boxName);
-      prayer = box.get(id);
-      if (prayer != null) {
-        titleTextController.text = prayer.name;
-        contentTextController.text = prayer.content;
-        limitTextController.text = prayer.total.toString();
-      }
-    }
-
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return Directionality(
-            textDirection: TextDirection.rtl,
-            child: AlertDialog(
-              title: Text(prayer != null ? "تعديل العداد" : "اضافة عداد جديد"),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: TextField(
-                            style: TextStyle(fontSize: 20),
-                            decoration: InputDecoration(
-                                label: Text("العنوان",
-                                    style: TextStyle(fontSize: 20)),
-                                border: OutlineInputBorder()),
-                            controller: titleTextController),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        flex: 2,
-                        child: TextField(
-                          style: TextStyle(fontSize: 20),
-                          controller: limitTextController,
-                          decoration: InputDecoration(
-                              label: Text("العداد",
-                                  style: TextStyle(fontSize: 20)),
-                              border: OutlineInputBorder()),
-                          keyboardType: TextInputType.number,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    maxLines: 10,
-                    style: TextStyle(fontSize: 20),
-                    decoration: InputDecoration(
-                        label: Text("الذكر", style: TextStyle(fontSize: 20)),
-                        border: OutlineInputBorder()),
-                    controller: contentTextController,
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text("إلغاء", style: TextStyle(fontSize: 20))),
-                FilledButton(
-                    onPressed: () async {
-                      final box = await Hive.box<Prayer>(boxName);
-                      box
-                          .put(
-                              titleTextController.text,
-                              Prayer(
-                                  titleTextController.text,
-                                  int.parse(limitTextController.text),
-                                  0,
-                                  contentTextController.text,
-                                  numberOfCompletedPrayers: 0))
-                          .then((value) => Navigator.pop(context));
-                    },
-                    child: Text("اضافة", style: TextStyle(fontSize: 20))),
-              ],
-            ),
-          );
-        });
-  }
 
   Future<dynamic> confirmationAlert(BuildContext context, Prayer prayer,
       Box<Prayer> box, int i, bool addition) {
+    final themeChangeProvider =
+        Provider.of<TheThemeProvider>(context, listen: false);
+    final isAr = themeChangeProvider.language == 'ar';
     return showDialog(
         context: context,
         builder: (context) => Directionality(
-              textDirection: TextDirection.rtl,
+              textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
               child: AlertDialog(
                 icon: Icon(addition
                     ? Icons.done_outline_outlined
                     : Icons.cancel_outlined),
-                title: Text(addition ? "قضيت الصلاة ؟" : "لم تقضي الصلاة ؟"),
+                title: Text(addition
+                    ? (isAr ? "تأكيد التسبيح" : "Confirm Tasbih")
+                    : (isAr ? "تأكيد التراجع" : "Confirm Undo")),
                 content: Text(
                   addition
-                      ? "هل انت متأكد من انك قضيت صلاة ${prayer.name} ؟"
-                      : "هل انت متأكد من انك لم تقضي صلاة ${prayer.name} ؟",
+                      ? (isAr
+                          ? "هل أنت متأكد من أنك قمت بـ ${prayer.name}؟"
+                          : "Are you sure you performed ${prayer.name}?")
+                      : (isAr
+                          ? "هل أنت متأكد من أنك تريد التراجع في ${prayer.name}؟"
+                          : "Are you sure you want to decrement ${prayer.name}?"),
                   style: const TextStyle(fontSize: 20),
                 ),
                 actions: [
                   TextButton(
-                      child: const Text(
-                        "لا",
-                        style: TextStyle(fontSize: 15),
+                      child: Text(
+                        isAr ? "لا" : "No",
+                        style: const TextStyle(fontSize: 15),
                       ),
                       onPressed: () => Navigator.pop(context)),
                   TextButton(
-                      child: const Text(
-                        "نعم",
-                        style: TextStyle(fontSize: 15),
+                      child: Text(
+                        isAr ? "نعم" : "Yes",
+                        style: const TextStyle(fontSize: 15),
                       ),
                       onPressed: () async {
                         if (addition) {
