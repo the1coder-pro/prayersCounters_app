@@ -1,11 +1,11 @@
 {
     "name": "عداد التسبيح",
-    "short_name": "مسباح",
+    "short_name": "عداد التسبيح",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#fbf8ff",
     "theme_color": "#fbf8ff",
-    "description": "تطبيق لإدارة عدادات التسبيح.",
+    "description": "تطبيق لإدارة عدادات التسبيح",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
