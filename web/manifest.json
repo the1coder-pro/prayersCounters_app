@@ -1,11 +1,11 @@
 {
-    "name": "prayer_counter",
-    "short_name": "prayer_counter",
+    "name": "عداد التسبيح",
+    "short_name": "مسباح",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#a1cbf5",
-    "theme_color": "#a1cbf5",
-    "description": "A new Flutter project.",
+    "background_color": "#fbf8ff",
+    "theme_color": "#fbf8ff",
+    "description": "تطبيق لإدارة عدادات التسبيح.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
