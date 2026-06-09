@@ -392,13 +392,12 @@ class _SettingsPageState extends State<SettingsPage> {
               themeChangeProvider.enableAnimations = value;
             },
           ),
-          const Divider(height: 1),
           SwitchListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 20),
             title: Text(
               themeChangeProvider.language == 'ar'
-                  ? "تفعيل الصوت"
-                  : "Enable Audio",
+                  ? "تفعيل صوت الاكتمال"
+                  : "Enable Completion Sound",
               style: TextStyle(fontSize: themeChangeProvider.fontSize * 0.75),
             ),
             subtitle: Text(
@@ -413,6 +412,29 @@ class _SettingsPageState extends State<SettingsPage> {
             value: themeChangeProvider.enableAudio,
             onChanged: (bool value) {
               themeChangeProvider.enableAudio = value;
+            },
+          ),
+          const Divider(height: 1),
+          SwitchListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+            title: Text(
+              themeChangeProvider.language == 'ar'
+                  ? "تفعيل صوت المسبحة"
+                  : "Enable Misbah Sound",
+              style: TextStyle(fontSize: themeChangeProvider.fontSize * 0.75),
+            ),
+            subtitle: Text(
+              themeChangeProvider.language == 'ar'
+                  ? "تشغيل صوت التجزئة عند تحريك خرز المسبحة."
+                  : "Play tap sound when moving Misbah beads.",
+              style: TextStyle(
+                fontSize: themeChangeProvider.fontSize * 0.55,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            value: themeChangeProvider.enableMisbahAudio,
+            onChanged: (bool value) {
+              themeChangeProvider.enableMisbahAudio = value;
             },
           ),
           const Divider(height: 1),
@@ -912,7 +934,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Column(
                   children: [
                     Text(
-                      "v1.0.4",
+                      "v1.0.5",
                       style: TextStyle(
                         fontSize: 14,
                         color: Theme.of(context).colorScheme.outline,

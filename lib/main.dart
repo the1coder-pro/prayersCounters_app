@@ -76,6 +76,8 @@ class _MyAppState extends State<MyApp> {
         await themeChangeProvider.preference.getUILanguage();
     themeChangeProvider.enableAudio =
         await themeChangeProvider.preference.getAudioTheme();
+    themeChangeProvider.enableMisbahAudio =
+        await themeChangeProvider.preference.getMisbahAudioTheme();
   }
 
   void getCurrentColorTheme() async {

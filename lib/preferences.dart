@@ -16,6 +16,7 @@ class TheThemePreference {
   static const CONFIRM_INCREMENT = "CONFIRMINCREMENT";
   static const CONFIRM_DECREMENT = "CONFIRMDECREMENT";
   static const AUDIO_STATUS = "AUDIOSTATUS";
+  static const MISBAH_AUDIO_STATUS = "MISBAHAUDIOSTATUS";
 
   setDarkTheme(bool value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -35,6 +36,16 @@ class TheThemePreference {
   Future<bool> getAudioTheme() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(AUDIO_STATUS) ?? true;
+  }
+
+  setMisbahAudioTheme(bool value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool(MISBAH_AUDIO_STATUS, value);
+  }
+
+  Future<bool> getMisbahAudioTheme() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(MISBAH_AUDIO_STATUS) ?? true;
   }
 
   setFontSize(double size) async {
@@ -227,6 +238,15 @@ class TheThemeProvider with ChangeNotifier {
   set enableAudio(bool value) {
     _enableAudio = value;
     preference.setAudioTheme(value);
+    notifyListeners();
+  }
+
+  bool _enableMisbahAudio = true;
+  bool get enableMisbahAudio => _enableMisbahAudio;
+
+  set enableMisbahAudio(bool value) {
+    _enableMisbahAudio = value;
+    preference.setMisbahAudioTheme(value);
     notifyListeners();
   }
 }

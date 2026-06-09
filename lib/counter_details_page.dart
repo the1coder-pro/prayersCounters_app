@@ -123,11 +123,21 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
     final themeChangeProvider =
         Provider.of<TheThemeProvider>(context, listen: false);
     if (isCompletion) {
-      AudioPlayerHelper.playCompletionSound();
+      if (themeChangeProvider.enableAudio) {
+        AudioPlayerHelper.playCompletionSound();
+      }
       if (themeChangeProvider.vibrateOnComplete) {
         HapticFeedback.vibrate();
       }
     } else {
+      final bool playSound = _viewMode == CounterViewMode.bigButton
+          ? themeChangeProvider.enableAudio
+          : themeChangeProvider.enableMisbahAudio;
+      if (playSound) {
+        // Play system click sound (for mobile) and URL sound (for web)
+        SystemSound.play(SystemSoundType.click);
+        AudioPlayerHelper.playTapSound();
+      }
       if (themeChangeProvider.vibrateOnTap) {
         HapticFeedback.lightImpact();
       }
@@ -140,11 +150,13 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
     setState(() {
       if (increase) {
         if (_contentFontSize < 100) {
-          _contentFontSize += 1;
+          _contentFontSize += 3;
+          if (_contentFontSize > 100) _contentFontSize = 100;
         }
       } else {
         if (_contentFontSize > 10) {
-          _contentFontSize -= 1;
+          _contentFontSize -= 3;
+          if (_contentFontSize < 10) _contentFontSize = 10;
         }
       }
     });
@@ -183,65 +195,107 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
           elevation: 0,
           title: Text(
             widget.prayer.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 22,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               fontFamily: "Rubik",
             ),
           ),
-          centerTitle: true,
           actions: [
-            // Decrease Font
+            // Font size triggers directly on AppBar
             GestureDetector(
               onTap: () => _changeFontSize(false),
               onLongPressStart: (_) => _startChangingSize(false),
               onLongPressEnd: (_) => _stopChangingSize(),
               child: const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                child: Icon(Icons.text_decrease_outlined, size: 22),
+                child: Icon(Icons.text_decrease_outlined, size: 20),
               ),
             ),
-            // Increase Font
             GestureDetector(
               onTap: () => _changeFontSize(true),
               onLongPressStart: (_) => _startChangingSize(true),
               onLongPressEnd: (_) => _stopChangingSize(),
               child: const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                child: Icon(Icons.text_increase_outlined, size: 22),
+                child: Icon(Icons.text_increase_outlined, size: 20),
               ),
             ),
-            // Palette Icon for custom color picker
-            IconButton(
-              icon: Icon(Icons.palette_outlined,
+            PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert_outlined,
                   color: theme.colorScheme.primary, size: 22),
-              tooltip: themeChangeProvider.language == 'ar'
-                  ? "تغيير لون المسبحة"
-                  : "Change Misbah Color",
-              onPressed: () => _showColorPickerDialog(context, themeChangeProvider),
-            ),
-            const SizedBox(width: 4),
-            PopupMenuButton<CounterViewMode>(
-              icon: Icon(Icons.display_settings_outlined,
-                  color: theme.colorScheme.primary, size: 22),
-              tooltip: themeChangeProvider.language == 'ar'
-                  ? "خيارات العرض"
-                  : "View Options",
-              onSelected: (CounterViewMode mode) {
-                setState(() {
-                  _viewMode = mode;
-                  if (_viewMode != CounterViewMode.bigButton &&
-                      _scrollController.hasClients) {
-                    _scrollController
-                        .jumpToItem(50000 + widget.prayer.finished);
-                    _lastSelectedIndex = 50000 + widget.prayer.finished;
-                  }
-                });
-                _saveViewModePreference(mode);
+              onSelected: (String choice) {
+                if (choice == 'edit') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddCounterPage(
+                        prayer: widget.prayer,
+                        isEdit: true,
+                      ),
+                    ),
+                  ).then((result) {
+                    if (result is Prayer) {
+                      setState(() {
+                        // The user might have renamed the prayer, in which case the key changed.
+                        // Or they assigned/changed properties. We re-fetch it from Hive or use the result.
+                        widget.prayer = Hive.box<Prayer>(boxName).get(result.name) ?? result;
+                      });
+                    }
+                  });
+                } else if (choice == 'delete') {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return Directionality(
+                          textDirection: themeChangeProvider.language == 'ar'
+                              ? TextDirection.rtl
+                              : TextDirection.ltr,
+                          child: AlertDialog(
+                            icon: const Icon(Icons.delete_forever_outlined),
+                            title: const Text('حذف العداد'),
+                            content: const Text('هل تريد حذف هذا العداد؟'),
+                            actions: [
+                              TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('لا')),
+                              TextButton(
+                                  onPressed: () async {
+                                    await Hive.box<Prayer>(boxName)
+                                        .delete(widget.prayer.name);
+                                    Navigator.pop(context);
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('نعم')),
+                            ],
+                          ),
+                        );
+                      });
+                } else if (choice == 'color') {
+                  _showColorPickerDialog(context, themeChangeProvider);
+                } else if (choice == 'view_mode_big') {
+                  setState(() {
+                    _viewMode = CounterViewMode.bigButton;
+                  });
+                  _saveViewModePreference(CounterViewMode.bigButton);
+                } else if (choice == 'view_mode_vertical') {
+                  setState(() {
+                    _viewMode = CounterViewMode.verticalMisbah;
+                    if (_scrollController.hasClients) {
+                      _scrollController.jumpToItem(50000 + widget.prayer.finished);
+                      _lastSelectedIndex = 50000 + widget.prayer.finished;
+                    }
+                  });
+                  _saveViewModePreference(CounterViewMode.verticalMisbah);
+                }
               },
               itemBuilder: (BuildContext context) => [
                 PopupMenuItem(
-                  value: CounterViewMode.bigButton,
+                  value: 'view_mode_big',
                   child: Row(
                     children: [
                       Icon(Icons.touch_app_outlined,
@@ -254,7 +308,7 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
                   ),
                 ),
                 PopupMenuItem(
-                  value: CounterViewMode.verticalMisbah,
+                  value: 'view_mode_vertical',
                   child: Row(
                     children: [
                       Icon(Icons.swipe_vertical_outlined,
@@ -266,311 +320,280 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
                     ],
                   ),
                 ),
-                // PopupMenuItem(
-                //   value: CounterViewMode.horizontalMisbah,
-                //   child: Row(
-                //     children: [
-                //       Icon(Icons.swipe_left_outlined, color: theme.colorScheme.primary, size: 20),
-                //       const SizedBox(width: 8),
-                //       Text(themeChangeProvider.language == 'ar' ? "المسبحة الأفقية" : "Horizontal Misbah"),
-                //     ],
-                //   ),
-                // ),
-              ],
-            ),
-            const SizedBox(width: 4),
-            // Edit Button
-            IconButton(
-              icon: Icon(Icons.edit_outlined,
-                  color: theme.colorScheme.primary, size: 22),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddCounterPage(
-                      prayer: widget.prayer,
-                      isEdit: true,
-                    ),
+                PopupMenuItem(
+                  value: 'color',
+                  child: Row(
+                    children: [
+                      Icon(Icons.palette_outlined,
+                          color: theme.colorScheme.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Text(themeChangeProvider.language == 'ar'
+                          ? "تغيير لون المسبحة"
+                          : "Change Misbah Color"),
+                    ],
                   ),
-                ).then((result) {
-                  if (result is Prayer) {
-                    setState(() {
-                      widget.prayer = result;
-                    });
-                  }
-                });
-              },
-            ),
-            // Delete Button
-            IconButton(
-              icon: Icon(Icons.delete_outline,
-                  color: theme.colorScheme.error, size: 22),
-              onPressed: () {
-                showDialog(
-                    context: context,
-                    builder: (context) {
-                      return Directionality(
-                        textDirection: themeChangeProvider.language == 'ar'
-                            ? TextDirection.rtl
-                            : TextDirection.ltr,
-                        child: AlertDialog(
-                          icon: const Icon(Icons.delete_forever_outlined),
-                          title: const Text('حذف العداد'),
-                          content: const Text('هل تريد حذف هذا العداد؟'),
-                          actions: [
-                            TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: const Text('لا')),
-                            TextButton(
-                                onPressed: () async {
-                                  await Hive.box<Prayer>(boxName)
-                                      .delete(widget.prayer.name);
-                                  Navigator.pop(context);
-                                  Navigator.pop(context);
-                                },
-                                child: const Text('نعم')),
-                          ],
-                        ),
-                      );
-                    });
-              },
+                ),
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit_outlined,
+                          color: theme.colorScheme.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Text(themeChangeProvider.language == 'ar'
+                          ? "تعديل العداد"
+                          : "Edit Counter"),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline,
+                          color: theme.colorScheme.error, size: 20),
+                      const SizedBox(width: 8),
+                      Text(themeChangeProvider.language == 'ar'
+                          ? "حذف العداد"
+                          : "Delete Counter"),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(width: 8),
           ],
         ),
-        body: Center(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // 1. CONTENT BOX (Flexible with maximum height limit)
-              Flexible(
-                fit: FlexFit.loose,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Container(
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * 
-                          (0.3 + (0.3 * ((_contentFontSize - 24.0) / 76.0).clamp(0.0, 1.0))),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            // 1. CONTENT BOX (Flexible with maximum height limit)
+            Flexible(
+              fit: FlexFit.tight,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 4.0),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: theme.colorScheme.outlineVariant
+                          .withValues(alpha: 0.3),
+                      width: 1,
                     ),
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: theme.colorScheme.outlineVariant
-                            .withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(20.0),
-                    child: SingleChildScrollView(
-                      child: Center(
-                        child: Text(
-                          widget.prayer.content,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: "Scheherazade",
-                            fontSize: _contentFontSize,
-                            height: 1.6,
-                            color: theme.colorScheme.onSurface,
-                          ),
+                  ),
+                  padding: const EdgeInsets.all(20.0),
+                  child: SingleChildScrollView(
+                    child: Center(
+                      child: Text(
+                        widget.prayer.content,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: "Scheherazade",
+                          fontSize: _contentFontSize,
+                          height: 1.6,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
+            ),
 
-              // 2. AUXILIARY STATUS/ACTIONS ROW (Symmetric, aligned, non-shifting)
-              Padding(
+            Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Left Side: Reset Button wrapper (Fixed width: 70)
+                    // Left Side: Cycles count pill wrapper (Height: 40)
                     SizedBox(
-                      width: 70,
-                      child: Align(
-                        alignment: themeChangeProvider.language == 'ar'
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                        child: Tooltip(
-                          message: themeChangeProvider.language == 'ar' ? "تصفير" : "Reset",
-                          child: Container(
-                            height: 40,
-                            width: 40,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: theme.colorScheme.errorContainer.withValues(alpha: 0.15),
-                            ),
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              iconSize: 20,
-                              icon: Animate(
-                                controller: reloadController,
-                                effects: [RotateEffect(duration: 200.milliseconds)],
-                                child: Icon(
-                                  Icons.replay_outlined,
-                                  color: theme.colorScheme.error,
-                                ),
-                              ),
-                              onPressed: () async {
-                                final performReset = () async {
-                                  widget.prayer.finished = 0;
-                                  await Hive.box<Prayer>(boxName).put(
-                                      widget.prayer.name,
-                                        Prayer(
-                                          widget.prayer.name,
-                                          widget.prayer.total,
-                                          widget.prayer.finished,
-                                          widget.prayer.content,
-                                          numberOfCompletedPrayers: widget
-                                              .prayer.numberOfCompletedPrayers,
-                                          nextCounterName: widget.prayer.nextCounterName,
-                                          misbahColorValue: widget.prayer.misbahColorValue,
-                                        ));
-                                  if (_scrollController.hasClients) {
-                                    _scrollController.jumpToItem(50000);
-                                    _lastSelectedIndex = 50000;
-                                  }
-                                  setState(() {});
-                                  reloadController!.forward(from: 0);
-                                };
-
-                                if (themeChangeProvider.confirmReset) {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => Directionality(
-                                      textDirection:
-                                          themeChangeProvider.language == 'ar'
-                                              ? TextDirection.rtl
-                                              : TextDirection.ltr,
-                                      child: AlertDialog(
-                                        icon: const Icon(Icons.refresh_outlined),
-                                        title: const Text("تأكيد التصفير"),
-                                        content: Text(
-                                            "هل أنت متأكد من تصفير عداد \"${widget.prayer.name}\"؟"),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(context),
-                                            child: const Text("لا"),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              performReset();
-                                              Navigator.pop(context);
-                                            },
-                                            child: const Text("نعم"),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                } else {
-                                  await performReset();
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    // Center: Total Count Pill (Fixed width: 180, non-shifting text)
-                    Container(
-                      width: 180,
                       height: 40,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              themeChangeProvider.language == 'ar'
-                                  ? "المجموع الحالي"
-                                  : "Total Count",
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
-                              ),
-                            ),
-                            Text(
-                              "${widget.prayer.total > 0 ? (widget.prayer.numberOfCompletedPrayers * widget.prayer.total) + widget.prayer.finished : widget.prayer.finished}",
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    // Right Side: Cycles count pill wrapper (Fixed width: 70)
-                    SizedBox(
-                      width: 70,
                       child: widget.prayer.total > 0
-                          ? Align(
-                              alignment: themeChangeProvider.language == 'ar'
-                                  ? Alignment.centerLeft
-                                  : Alignment.centerRight,
-                              child: Tooltip(
-                                message: themeChangeProvider.language == 'ar'
-                                    ? "الدورات المكتملة"
-                                    : "Completed Cycles",
-                                child: Container(
-                                  height: 40,
-                                  width: 70,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: theme.colorScheme.secondaryContainer,
-                                  ),
-                                  child: Center(
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.loop_outlined,
-                                          size: 16,
+                          ? Tooltip(
+                              message: themeChangeProvider.language == 'ar'
+                                  ? "الدورات المكتملة"
+                                  : "Completed Cycles",
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: theme.colorScheme.secondaryContainer,
+                                ),
+                                child: Center(
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.loop_outlined,
+                                        size: 16,
+                                        color: theme.colorScheme.onSecondaryContainer,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        widget.prayer.numberOfCompletedPrayers.toString(),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
                                           color: theme.colorScheme.onSecondaryContainer,
                                         ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          widget.prayer.numberOfCompletedPrayers.toString(),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                            color: theme.colorScheme.onSecondaryContainer,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
                             )
                           : const SizedBox.shrink(),
                     ),
+
+                    // Middle Side: Show Next Counter Button (if configured) in both modes (Height: 40)
+                    SizedBox(
+                      height: 40,
+                      child: widget.prayer.nextCounterName != null && widget.prayer.nextCounterName!.isNotEmpty
+                          ? Tooltip(
+                              message: themeChangeProvider.language == 'ar'
+                                  ? "العداد التالي: ${widget.prayer.nextCounterName}"
+                                  : "Next Counter: ${widget.prayer.nextCounterName}",
+                              child: TextButton.icon(
+                                onPressed: _navigateToNextCounter,
+                                icon: Icon(
+                                  Icons.skip_next_outlined,
+                                  size: 18,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                label: Text(
+                                  _viewMode != CounterViewMode.bigButton
+                                      ? (themeChangeProvider.language == 'ar' 
+                                          ? "التالي (${widget.prayer.finished}${widget.prayer.total > 0 ? '/${widget.prayer.total}' : ''})"
+                                          : "Next (${widget.prayer.finished}${widget.prayer.total > 0 ? '/${widget.prayer.total}' : ''})")
+                                      : (themeChangeProvider.language == 'ar' ? "العداد التالي" : "Next counter"),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                                style: TextButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : (_viewMode != CounterViewMode.bigButton
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: theme.colorScheme.primaryContainer,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      "${widget.prayer.finished}${widget.prayer.total > 0 ? ' / ${widget.prayer.total}' : ''}",
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.onPrimaryContainer,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox.shrink()),
+                    ),
+
+                    // Right Side: Reset Button wrapper (Height: 40)
+                    SizedBox(
+                      height: 40,
+                      width: 40,
+                      child: Tooltip(
+                        message: themeChangeProvider.language == 'ar' ? "تصفير" : "Reset",
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: theme.colorScheme.errorContainer.withValues(alpha: 0.15),
+                          ),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            iconSize: 20,
+                            icon: Animate(
+                              controller: reloadController,
+                              effects: [RotateEffect(duration: 200.milliseconds)],
+                              child: Icon(
+                                Icons.replay_outlined,
+                                color: theme.colorScheme.error,
+                              ),
+                            ),
+                            onPressed: () async {
+                              final performReset = () async {
+                                widget.prayer.finished = 0;
+                                await Hive.box<Prayer>(boxName).put(
+                                    widget.prayer.name,
+                                      Prayer(
+                                        widget.prayer.name,
+                                        widget.prayer.total,
+                                        widget.prayer.finished,
+                                        widget.prayer.content,
+                                        numberOfCompletedPrayers: widget
+                                            .prayer.numberOfCompletedPrayers,
+                                        nextCounterName: widget.prayer.nextCounterName,
+                                        misbahColorValue: widget.prayer.misbahColorValue,
+                                      ));
+                                if (_scrollController.hasClients) {
+                                  _scrollController.jumpToItem(50000);
+                                  _lastSelectedIndex = 50000;
+                                }
+                                setState(() {});
+                                reloadController!.forward(from: 0);
+                              };
+
+                              if (themeChangeProvider.confirmReset) {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => Directionality(
+                                    textDirection:
+                                        themeChangeProvider.language == 'ar'
+                                            ? TextDirection.rtl
+                                            : TextDirection.ltr,
+                                    child: AlertDialog(
+                                      icon: const Icon(Icons.refresh_outlined),
+                                      title: const Text("تأكيد التصفير"),
+                                      content: Text(
+                                          "هل أنت متأكد من تصفير عداد \"${widget.prayer.name}\"؟"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context),
+                                          child: const Text("لا"),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            performReset();
+                                            Navigator.pop(context);
+                                          },
+                                          child: const Text("نعم"),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                await performReset();
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
 
-              const Spacer(),
               // 3. MAIN COUNTER INCREMENT BUTTON OR MISBAH MODE
-              Center(
+              Expanded(
+                flex: 2,
                 child: _viewMode == CounterViewMode.horizontalMisbah
                     ? _buildHorizontalMisbahView(
                         context, theme, themeChangeProvider)
@@ -581,7 +604,6 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
                             context, theme, themeChangeProvider, progress)),
               ),
             ],
-          ),
         ),
       ),
     );
@@ -595,32 +617,28 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
         'value': null,
       },
       {
-        'name': themeChangeProvider.language == 'ar' ? 'أزرق داكن' : 'Dark Blue',
-        'value': Colors.blue.value,
+        'name': themeChangeProvider.language == 'ar' ? 'غرافيت' : 'Graphite',
+        'value': 0xFF383838,
       },
       {
-        'name': themeChangeProvider.language == 'ar' ? 'أخضر' : 'Green',
-        'value': Colors.green.value,
+        'name': themeChangeProvider.language == 'ar' ? 'فيروزي' : 'Firuz (Turquoise)',
+        'value': 0xFF30D5C8,
       },
       {
-        'name': themeChangeProvider.language == 'ar' ? 'أحمر' : 'Red',
-        'value': Colors.red.value,
+        'name': themeChangeProvider.language == 'ar' ? 'رخامي' : 'Marble (White)',
+        'value': 0xFFEAEAEA,
       },
       {
-        'name': themeChangeProvider.language == 'ar' ? 'برتقالي' : 'Orange',
-        'value': Colors.orange.value,
+        'name': themeChangeProvider.language == 'ar' ? 'كوارتز' : 'Quartz (Pink)',
+        'value': 0xFFF7C8DA,
       },
       {
-        'name': themeChangeProvider.language == 'ar' ? 'بنفسجي' : 'Purple',
-        'value': Colors.purple.value,
+        'name': themeChangeProvider.language == 'ar' ? 'خشبي' : 'Wood',
+        'value': 0xFF8B5A2B,
       },
       {
-        'name': themeChangeProvider.language == 'ar' ? 'كحلي' : 'Teal',
-        'value': Colors.teal.value,
-      },
-      {
-        'name': themeChangeProvider.language == 'ar' ? 'عنبري' : 'Amber',
-        'value': Colors.amber.value,
+        'name': themeChangeProvider.language == 'ar' ? 'حجري' : 'Stone (Grey)',
+        'value': 0xFF8A9A86,
       },
     ];
 
@@ -713,19 +731,16 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
 
   Widget _buildBigButtonView(BuildContext context, ThemeData theme,
       TheThemeProvider themeChangeProvider, double progress) {
-    final hasNext = widget.prayer.nextCounterName != null && widget.prayer.nextCounterName!.isNotEmpty;
     return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 12),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 16),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Center(
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.35,
-                width: double.infinity,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
+          Expanded(
+            child: SizedBox(
+              width: double.infinity,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
                   // Rounded Square Progress Outline
                   if (widget.prayer.total > 0)
                     Positioned.fill(
@@ -798,29 +813,10 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
                       ),
                     ),
                   ),
-                  ],
-                ),
+                ],
               ),
             ),
-          if (hasNext) ...[
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              onPressed: _navigateToNextCounter,
-              icon: const Icon(Icons.skip_next_outlined, size: 20),
-              label: Text(
-                themeChangeProvider.language == 'ar'
-                    ? "العداد التالي: ${widget.prayer.nextCounterName}"
-                    : "Next Counter: ${widget.prayer.nextCounterName}",
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(44),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
+          ),
         ],
       ),
     );
@@ -831,31 +827,10 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Large Counter Display
-        Text(
-          widget.prayer.finished.toString(),
-          style: TextStyle(
-            fontSize: 64,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Ubuntu Mono',
-            color: theme.colorScheme.primary,
-          ),
-        ),
-        Text(
-          themeChangeProvider.language == 'ar'
-              ? (widget.prayer.total <= 0 ? "مفتوح" : "${widget.prayer.total}")
-              : (widget.prayer.total <= 0 ? "Open" : "${widget.prayer.total}"),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-          ),
-        ),
-        const SizedBox(height: 12),
         // Scrollable Beads
         Expanded(
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 40),
+            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(24),
@@ -920,27 +895,10 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
                                 offset: const Offset(0, 2),
                               ),
                             ],
-                            gradient: RadialGradient(
-                              center: const Alignment(-0.3, -0.3),
-                              radius: 0.6,
-                              colors: [
-                                Colors.white.withValues(alpha: 0.4),
-                                isCenter
-                                    ? (widget.prayer.misbahColorValue != null
-                                        ? Color(widget.prayer.misbahColorValue!)
-                                        : theme.colorScheme.primary)
-                                    : (widget.prayer.misbahColorValue != null
-                                        ? Color(widget.prayer.misbahColorValue!).withValues(alpha: 0.7)
-                                        : theme.colorScheme.secondary),
-                                isCenter
-                                    ? (widget.prayer.misbahColorValue != null
-                                        ? Color(widget.prayer.misbahColorValue!)
-                                        : theme.colorScheme.primaryContainer)
-                                    : (widget.prayer.misbahColorValue != null
-                                        ? Color(widget.prayer.misbahColorValue!).withValues(alpha: 0.5)
-                                        : theme.colorScheme.secondaryContainer),
-                              ],
-                              stops: const [0.0, 0.6, 1.0],
+                            gradient: _getStoneGradient(widget.prayer.misbahColorValue, isCenter, theme),
+                            border: Border.all(
+                              color: _getStoneBorderColor(widget.prayer.misbahColorValue, isCenter, theme),
+                              width: 1.5,
                             ),
                           ),
                           child: Stack(
@@ -993,31 +951,10 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Large Counter Display
-        Text(
-          widget.prayer.finished.toString(),
-          style: TextStyle(
-            fontSize: 64,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Ubuntu Mono',
-            color: theme.colorScheme.primary,
-          ),
-        ),
-        Text(
-          themeChangeProvider.language == 'ar'
-              ? (widget.prayer.total <= 0 ? "مفتوح" : "${widget.prayer.total}")
-              : (widget.prayer.total <= 0 ? "Open" : "${widget.prayer.total}"),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-          ),
-        ),
-        const SizedBox(height: 12),
         // Scrollable Beads (Horizontal Layout)
         Expanded(
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 40),
+            margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(24),
@@ -1088,27 +1025,10 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
                                     offset: const Offset(0, 2),
                                   ),
                                 ],
-                                gradient: RadialGradient(
-                                  center: const Alignment(-0.3, -0.3),
-                                  radius: 0.6,
-                                  colors: [
-                                    Colors.white.withValues(alpha: 0.4),
-                                    isCenter
-                                        ? (widget.prayer.misbahColorValue != null
-                                            ? Color(widget.prayer.misbahColorValue!)
-                                            : theme.colorScheme.primary)
-                                        : (widget.prayer.misbahColorValue != null
-                                            ? Color(widget.prayer.misbahColorValue!).withValues(alpha: 0.7)
-                                            : theme.colorScheme.secondary),
-                                    isCenter
-                                        ? (widget.prayer.misbahColorValue != null
-                                            ? Color(widget.prayer.misbahColorValue!)
-                                            : theme.colorScheme.primaryContainer)
-                                        : (widget.prayer.misbahColorValue != null
-                                            ? Color(widget.prayer.misbahColorValue!).withValues(alpha: 0.5)
-                                            : theme.colorScheme.secondaryContainer),
-                                  ],
-                                  stops: const [0.0, 0.6, 1.0],
+                                gradient: _getStoneGradient(widget.prayer.misbahColorValue, isCenter, theme),
+                                border: Border.all(
+                                  color: _getStoneBorderColor(widget.prayer.misbahColorValue, isCenter, theme),
+                                  width: 1.5,
                                 ),
                               ),
                               child: Stack(
@@ -1221,4 +1141,107 @@ class RoundedSquareProgressPainter extends CustomPainter {
         oldDelegate.color != color ||
         oldDelegate.backgroundColor != backgroundColor;
   }
+}
+
+Gradient _getStoneGradient(int? colorVal, bool isCenter, ThemeData theme) {
+  // 1. Graphite (0xFF383838)
+  if (colorVal == 0xFF383838) {
+    return RadialGradient(
+      center: const Alignment(-0.25, -0.25),
+      radius: 0.65,
+      colors: [
+        const Color(0xFF6B6B6B), // Graphite high highlight
+        isCenter ? const Color(0xFF262626) : const Color(0xFF383838),
+        isCenter ? const Color(0xFF141414) : const Color(0xFF1E1E1E),
+      ],
+      stops: const [0.0, 0.7, 1.0],
+    );
+  }
+  // 2. Firuz / Turquoise (0xFF30D5C8)
+  if (colorVal == 0xFF30D5C8) {
+    return RadialGradient(
+      center: const Alignment(-0.3, -0.3),
+      radius: 0.7,
+      colors: [
+        const Color(0xFFE0FFFF), // Pale highlight
+        isCenter ? const Color(0xFF30D5C8) : const Color(0xFF25A49A),
+        isCenter ? const Color(0xFF1B7D75) : const Color(0xFF165D57),
+      ],
+      stops: const [0.0, 0.65, 1.0],
+    );
+  }
+  // 3. Marble (0xFFEAEAEA)
+  if (colorVal == 0xFFEAEAEA) {
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        const Color(0xFFFFFFFF),
+        isCenter ? const Color(0xFFE5E5E5) : const Color(0xFFD6D6D6),
+        isCenter ? const Color(0xFFC0C0C0) : const Color(0xFFB0B0B0),
+      ],
+      stops: const [0.0, 0.6, 1.0],
+    );
+  }
+  // 4. Quartz (0xFFF7C8DA)
+  if (colorVal == 0xFFF7C8DA) {
+    return RadialGradient(
+      center: const Alignment(-0.2, -0.2),
+      radius: 0.65,
+      colors: [
+        const Color(0xFFFFF2F6), // soft quartz highlight
+        isCenter ? const Color(0xFFF7C8DA) : const Color(0xFFE2B2C3),
+        isCenter ? const Color(0xFFC18FA1) : const Color(0xFF9E7181),
+      ],
+      stops: const [0.0, 0.7, 1.0],
+    );
+  }
+  // 5. Wood (0xFF8B5A2B)
+  if (colorVal == 0xFF8B5A2B) {
+    return RadialGradient(
+      center: const Alignment(-0.25, -0.25),
+      radius: 0.7,
+      colors: [
+        const Color(0xFFCD853F), // Warm wood highlight
+        isCenter ? const Color(0xFF8B5A2B) : const Color(0xFF6B4226),
+        isCenter ? const Color(0xFF5C3317) : const Color(0xFF3D210F),
+      ],
+      stops: const [0.0, 0.6, 1.0],
+    );
+  }
+  // 6. Stone (0xFF8A9A86)
+  if (colorVal == 0xFF8A9A86) {
+    return LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        const Color(0xFFB4C2B0), // lighter grey-green stone highlight
+        isCenter ? const Color(0xFF8A9A86) : const Color(0xFF71826D),
+        isCenter ? const Color(0xFF566353) : const Color(0xFF434C3F),
+      ],
+      stops: const [0.0, 0.65, 1.0],
+    );
+  }
+
+  // Fallback / Default color
+  return RadialGradient(
+    center: const Alignment(-0.3, -0.3),
+    radius: 0.6,
+    colors: [
+      Colors.white.withValues(alpha: 0.4),
+      isCenter ? theme.colorScheme.primary : theme.colorScheme.secondary,
+      isCenter ? theme.colorScheme.primaryContainer : theme.colorScheme.secondaryContainer,
+    ],
+    stops: const [0.0, 0.6, 1.0],
+  );
+}
+
+Color _getStoneBorderColor(int? colorVal, bool isCenter, ThemeData theme) {
+  if (colorVal == 0xFF383838) return Colors.black38;
+  if (colorVal == 0xFF30D5C8) return const Color(0xFF1B7D75).withValues(alpha: 0.4);
+  if (colorVal == 0xFFEAEAEA) return Colors.black12;
+  if (colorVal == 0xFFF7C8DA) return const Color(0xFFC18FA1).withValues(alpha: 0.3);
+  if (colorVal == 0xFF8B5A2B) return const Color(0xFF3D210F).withValues(alpha: 0.4);
+  if (colorVal == 0xFF8A9A86) return const Color(0xFF434C3F).withValues(alpha: 0.3);
+  return Colors.transparent;
 }
