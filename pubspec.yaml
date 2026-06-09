@@ -43,6 +43,7 @@ dependencies:
   animations: ^2.0.11
   flutter_animate: ^4.5.0
   m3e_core: ^0.1.0
+  audioplayers: ^6.7.1
 
 dev_dependencies:
   flutter_test:
@@ -88,8 +89,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/kaaba_3d.png
+  assets:
+    - assets/completed.wav
   #   - images/moon_3d.png
   #   - images/a_dot_ham.jpeg
 

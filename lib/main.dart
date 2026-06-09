@@ -9,8 +9,10 @@ import 'package:prayers_counters_app/prayers_model.dart';
 import 'package:prayers_counters_app/settings_page.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:m3e_core/m3e_core.dart';
 
 import 'preferences.dart';
+import 'audio_player_helper.dart';
 
 String boxName = 'prayersBox';
 
@@ -72,6 +74,8 @@ class _MyAppState extends State<MyApp> {
         await themeChangeProvider.preference.getConfirmDecrement();
     themeChangeProvider.language =
         await themeChangeProvider.preference.getUILanguage();
+    themeChangeProvider.enableAudio =
+        await themeChangeProvider.preference.getAudioTheme();
   }
 
   void getCurrentColorTheme() async {
@@ -183,6 +187,15 @@ class _MyHomePageState extends State<MyHomePage> {
   Box<Prayer>? mainBox;
 
   Set<ViewMode> selected = {ViewMode.list};
+  bool _isSearching = false;
+  String _searchQuery = "";
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -192,6 +205,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return Scaffold(
       appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  _isSearching = false;
+                  _searchQuery = "";
+                  _searchController.clear();
+                } else {
+                  _isSearching = true;
+                }
+              });
+            },
+          ),
           actions: [
             PopupMenuButton(
               icon: const Icon(Icons.more_vert),
@@ -240,30 +267,41 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
-            //         setState(() {
-            //           selected = {value.first};
-            //         });
-            //       },
-            //       showSelectedIcon: false,
-            //       segments: [
-            //         ButtonSegment(
-            //             icon: const Icon(Icons.list_outlined),
-            //             value: ViewMode.list),
-            //         ButtonSegment(
-            //             icon: const Icon(Icons.grid_view_outlined),
-            //             value: ViewMode.grid),
-            //       ],
-            //       selected: selected),
-            // )
           ],
           backgroundColor: Theme.of(context).colorScheme.surface,
           centerTitle: true,
           elevation: 0,
-          title: Text(
-              themeChangeProvider.language == 'ar'
-                  ? "عداد التسبيح"
-                  : "Tasbih Counter",
-              style: const TextStyle(fontFamily: "Lateef", fontSize: 40))),
+          title: _isSearching
+              ? TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 20,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: themeChangeProvider.language == 'ar'
+                        ? "بحث عن عداد..."
+                        : "Search counters...",
+                    hintStyle: TextStyle(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6),
+                    ),
+                    border: InputBorder.none,
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                )
+              : Text(
+                  themeChangeProvider.language == 'ar'
+                      ? "عداد التسبيح"
+                      : "Tasbih Counter",
+                  style: const TextStyle(fontFamily: "Lateef", fontSize: 40))),
       floatingActionButton: ValueListenableBuilder<Box<Prayer>>(
         valueListenable: Hive.box<Prayer>(boxName).listenable(),
         builder: (context, box, _) {
@@ -364,7 +402,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: themeChangeProvider.fontSize * 0.55,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                             height: 1.4,
                           ),
                         ),
@@ -380,7 +419,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           );
                         },
                         style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -412,7 +452,78 @@ class _MyHomePageState extends State<MyHomePage> {
     return ValueListenableBuilder<Box<Prayer>>(
       valueListenable: Hive.box<Prayer>(boxName).listenable(),
       builder: (context, Box<Prayer> box, widget) {
-        final items = box.values.toList();
+        final allItems = box.values.toList();
+        final items = allItems.where((prayer) {
+          final query = _searchQuery.trim().toLowerCase();
+          if (query.isEmpty) return true;
+          final nameMatches = prayer.name.toLowerCase().contains(query);
+          final contentMatches = prayer.content.toLowerCase().contains(query);
+          return nameMatches || contentMatches;
+        }).toList();
+
+        if (items.isEmpty) {
+          final theme = Theme.of(context);
+          final isSourceEmpty = allItems.isEmpty;
+          final isArabic = themeChangeProvider.language == 'ar';
+
+          return Padding(
+            padding: const EdgeInsets.only(
+              top: 40.0,
+              left: 32.0,
+              right: 32.0,
+            ),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  M3EContainer.c4SidedCookie(
+                    width: 80,
+                    height: 80,
+                    padding: EdgeInsets.zero,
+                    border: BorderSide(
+                      color: theme.colorScheme.outlineVariant,
+                      width: 1.5,
+                    ),
+                    child: Center(
+                      child: Icon(
+                        isSourceEmpty
+                            ? Icons.inbox_outlined
+                            : Icons.search_off_outlined,
+                        size: 36,
+                        color: theme.colorScheme.secondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    isSourceEmpty
+                        ? (isArabic ? 'لا توجد عدادات مضافة' : 'No counters found')
+                        : (isArabic ? 'لا توجد نتائج مطابقة' : 'No results found'),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    isSourceEmpty
+                        ? (isArabic
+                            ? 'اضغط على زر الإضافة لإضافة عداد جديد.'
+                            : 'Tap the add button to add a new counter.')
+                        : (isArabic
+                            ? 'لم نتمكن من العثور على أي نتائج تطابق بحثك.'
+                            : "We couldn't find any matches matching your terms."),
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
         final isGridView = MediaQuery.of(context).size.width > 800 ||
             selected.contains(ViewMode.grid);
 
@@ -430,7 +541,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   context,
                   items[i],
                   box,
-                  i,
+                  items[i].name,
                   themeChangeProvider,
                   isFasting: false,
                 ),
@@ -440,16 +551,16 @@ class _MyHomePageState extends State<MyHomePage> {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 itemCount: items.length,
                 itemBuilder: (context, i) => _buildPrayerListCard(
-                    context, items[i], box, i, themeChangeProvider),
+                    context, items[i], box, items[i].name, themeChangeProvider),
               );
       },
     );
   }
 
   Widget _buildPrayerListCard(BuildContext context, Prayer prayer,
-      Box<Prayer> box, int index, themeChangeProvider) {
+      Box<Prayer> box, dynamic key, themeChangeProvider) {
     final theme = Theme.of(context);
-    final bool isCompleted = prayer.finished >= prayer.total;
+    final bool isCompleted = prayer.total > 0 && prayer.finished >= prayer.total;
 
     return Slidable(
       key: ValueKey(prayer.name),
@@ -460,7 +571,7 @@ class _MyHomePageState extends State<MyHomePage> {
             onPressed: (context) async {
               bool? result = await _showDeleteConfirmation(context);
               if (result == true) {
-                await box.deleteAt(index);
+                await box.delete(key);
                 setState(() {});
               }
             },
@@ -485,9 +596,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ? theme.colorScheme.onSurface.withOpacity(0.05)
                 : theme.colorScheme.surfaceContainer,
             borderRadius: BorderRadius.circular(20),
-            border: isCompleted
-                ? Border.all(color: theme.colorScheme.primary.withOpacity(0.2))
-                : null,
+            border: null,
           ),
           child: Row(
             children: [
@@ -495,9 +604,9 @@ class _MyHomePageState extends State<MyHomePage> {
               IconButton(
                 onPressed: () {
                   if (themeChangeProvider.confirmDecrement) {
-                    confirmationAlert(context, prayer, box, index, false);
+                    confirmationAlert(context, prayer, box, key, false);
                   } else {
-                    _handleDecrement(prayer, box, index);
+                    _handleDecrement(prayer, box, key);
                   }
                 },
                 icon: Icon(Icons.remove_circle_outline,
@@ -517,7 +626,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         color: theme.colorScheme.onSurface,
                       ),
                     ),
-                    if (prayer.numberOfCompletedPrayers > 0)
+                    if (prayer.total > 0 && prayer.numberOfCompletedPrayers > 0)
                       Text(
                         themeChangeProvider.language == 'ar'
                             ? "الدورات المكتملة: ${prayer.numberOfCompletedPrayers}"
@@ -529,32 +638,30 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
 
-              // Increment Button
-              if (!isCompleted)
-                TextButton(
-                  onPressed: () {
-                    if (themeChangeProvider.confirmIncrement) {
-                      confirmationAlert(context, prayer, box, index, true);
-                    } else {
-                      _handleIncrement(prayer, box, index);
-                    }
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: Text(
-                    themeChangeProvider.language == 'ar' ? "تسبيح" : "Tasbih",
-                    style: TextStyle(
-                        color: theme.colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.bold),
-                  ),
+              TextButton(
+                onPressed: () {
+                  if (themeChangeProvider.confirmIncrement) {
+                    confirmationAlert(context, prayer, box, key, true);
+                  } else {
+                    _handleIncrement(
+                        prayer, box, key, themeChangeProvider.enableAudio);
+                  }
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
+                child: Text(
+                  themeChangeProvider.language == 'ar' ? "تسبيح" : "Tasbih",
+                  style: TextStyle(
+                      color: theme.colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
 
               const SizedBox(width: 12),
 
-              // Modern Counter Box
               Container(
                 width: 80,
                 height: 60,
@@ -562,25 +669,16 @@ class _MyHomePageState extends State<MyHomePage> {
                   color: theme.colorScheme.onSurface,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Opacity(
-                      opacity: isCompleted ? 0.2 : 1.0,
-                      child: Text(
-                        "${prayer.finished}/${prayer.total}",
-                        style: TextStyle(
-                          color: theme.colorScheme.surface,
-                          fontSize: 24,
-                          fontFamily: 'Ubuntu Mono',
-                          fontFeatures: const [FontFeature.fractions()],
-                        ),
-                      ),
+                child: Center(
+                  child: Text(
+                    prayer.total > 0 ? "${prayer.finished}/${prayer.total}" : "${prayer.finished}",
+                    style: TextStyle(
+                      color: theme.colorScheme.surface,
+                      fontSize: 24,
+                      fontFamily: 'Ubuntu Mono',
+                      fontFeatures: const [FontFeature.fractions()],
                     ),
-                    if (isCompleted)
-                      Icon(Icons.check_circle,
-                          color: theme.colorScheme.primaryContainer, size: 35),
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -591,10 +689,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildGridCard(BuildContext context, Prayer prayer, Box<Prayer> box,
-      int index, themeChangeProvider,
+      dynamic key, themeChangeProvider,
       {bool isFasting = false}) {
     final theme = Theme.of(context);
-    final bool isCompleted = prayer.finished >= prayer.total;
+    final bool isCompleted = prayer.total > 0 && prayer.finished >= prayer.total;
 
     return Container(
       decoration: BoxDecoration(
@@ -635,9 +733,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           onPressed: () {
                             if (themeChangeProvider.confirmDecrement) {
                               confirmationAlert(
-                                  context, prayer, box, index, false);
+                                  context, prayer, box, key, false);
                             } else {
-                              _handleDecrement(prayer, box, index);
+                              _handleDecrement(prayer, box, key);
                             }
                           },
                           icon: Icon(Icons.remove_circle_outline,
@@ -657,7 +755,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Text(
-                      "${prayer.finished}/${prayer.total}",
+                       prayer.total > 0 ? "${prayer.finished}/${prayer.total}" : "${prayer.finished}",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: theme.colorScheme.surface,
@@ -674,9 +772,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   TextButton(
                     onPressed: () {
                       if (themeChangeProvider.confirmIncrement) {
-                        confirmationAlert(context, prayer, box, index, true);
+                        confirmationAlert(context, prayer, box, key, true);
                       } else {
-                        _handleIncrement(prayer, box, index);
+                        _handleIncrement(
+                            prayer, box, key, themeChangeProvider.enableAudio);
                       }
                     },
                     style: TextButton.styleFrom(
@@ -723,7 +822,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                           IconButton(
                             onPressed: () => confirmationAlert(
-                                context, prayer, box, index, false),
+                                context, prayer, box, key, false),
                             icon: Icon(
                               Icons.remove_circle_outline,
                               size: 20,
@@ -762,22 +861,27 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 // Logic Helpers to keep the UI code clean
-  void _handleIncrement(Prayer prayer, Box<Prayer> box, int index) async {
-    if (prayer.finished < prayer.total) {
+  void _handleIncrement(
+      Prayer prayer, Box<Prayer> box, dynamic key, bool enableAudio) async {
+    if (prayer.total <= 0) {
       prayer.finished += 1;
-      // If it reaches total after this increment, we can handle logic here
+    } else if (prayer.finished < prayer.total) {
+      prayer.finished += 1;
+      if (prayer.finished == prayer.total && enableAudio) {
+        AudioPlayerHelper.playCompletionSound();
+      }
     } else {
       // Logic for "Cycling" if needed
       prayer.numberOfCompletedPrayers += 1;
       prayer.finished = 0;
     }
-    await box.putAt(index, prayer);
+    await box.put(key, prayer);
   }
 
-  void _handleDecrement(Prayer prayer, Box<Prayer> box, int index) async {
+  void _handleDecrement(Prayer prayer, Box<Prayer> box, dynamic key) async {
     if (prayer.finished > 0) {
       prayer.finished -= 1;
-      await box.putAt(index, prayer);
+      await box.put(key, prayer);
     }
   }
 
@@ -799,10 +903,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-
-
   Future<dynamic> confirmationAlert(BuildContext context, Prayer prayer,
-      Box<Prayer> box, int i, bool addition) {
+      Box<Prayer> box, dynamic key, bool addition) {
     final themeChangeProvider =
         Provider.of<TheThemeProvider>(context, listen: false);
     final isAr = themeChangeProvider.language == 'ar';
@@ -841,15 +943,20 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       onPressed: () async {
                         if (addition) {
-                          if (prayer.finished != prayer.total) {
+                          if (prayer.total <= 0) {
                             prayer.finished += 1;
+                          } else if (prayer.finished != prayer.total) {
+                            prayer.finished += 1;
+                            if (prayer.finished == prayer.total) {
+                              AudioPlayerHelper.playCompletionSound();
+                            }
                           }
                         } else {
                           if (prayer.finished > 0) prayer.finished -= 1;
                         }
 
                         await box
-                            .putAt(i, prayer)
+                            .put(key, prayer)
                             .then((e) => Navigator.pop(context));
                       })
                 ],

@@ -11,6 +11,7 @@ import 'package:prayers_counters_app/prayers_model.dart';
 import 'package:prayers_counters_app/preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:prayers_counters_app/audio_player_helper.dart';
 
 enum CounterViewMode {
   bigButton,
@@ -78,15 +79,20 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
 
   Future<void> _incrementCounter({int amount = 1}) async {
     bool isCompletion = false;
-    for (int k = 0; k < amount; k++) {
-      if (widget.prayer.finished != widget.prayer.total) {
-        widget.prayer.finished += 1;
-        if (widget.prayer.finished == widget.prayer.total) {
-          isCompletion = true;
+    final total = widget.prayer.total;
+    if (total <= 0) {
+      widget.prayer.finished += amount;
+    } else {
+      for (int k = 0; k < amount; k++) {
+        if (widget.prayer.finished != total) {
+          widget.prayer.finished += 1;
+          if (widget.prayer.finished == total) {
+            isCompletion = true;
+          }
+        } else {
+          widget.prayer.finished = 0;
+          widget.prayer.numberOfCompletedPrayers++;
         }
-      } else {
-        widget.prayer.finished = 0;
-        widget.prayer.numberOfCompletedPrayers++;
       }
     }
 
@@ -101,6 +107,7 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
     final themeChangeProvider =
         Provider.of<TheThemeProvider>(context, listen: false);
     if (isCompletion) {
+      AudioPlayerHelper.playCompletionSound();
       if (themeChangeProvider.vibrateOnComplete) {
         HapticFeedback.vibrate();
       }
@@ -353,7 +360,9 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: widget.prayer.total > 0
+                      ? MainAxisAlignment.spaceBetween
+                      : MainAxisAlignment.center,
                   children: [
                     // Reset Column
                     Column(
@@ -447,37 +456,38 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
                     ),
 
                     // Cycles Column
-                    Column(
-                      children: [
-                        Container(
-                          height: 55,
-                          width: 55,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: theme.colorScheme.secondaryContainer,
-                          ),
-                          child: Center(
-                            child: Text(
-                              widget.prayer.numberOfCompletedPrayers.toString(),
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSecondaryContainer,
+                    if (widget.prayer.total > 0)
+                      Column(
+                        children: [
+                          Container(
+                            height: 55,
+                            width: 55,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              color: theme.colorScheme.secondaryContainer,
+                            ),
+                            child: Center(
+                              child: Text(
+                                widget.prayer.numberOfCompletedPrayers.toString(),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSecondaryContainer,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          "الدورات",
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurfaceVariant,
+                          const SizedBox(height: 6),
+                          Text(
+                            "الدورات",
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
                   ],
                 ),
               ),
@@ -516,18 +526,19 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
             alignment: Alignment.center,
             children: [
               // Rounded Square Progress Outline
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: RoundedSquareProgressPainter(
-                    progress: progress,
-                    color: theme.colorScheme.primary,
-                    backgroundColor:
-                        theme.colorScheme.primary.withValues(alpha: 0.1),
-                    strokeWidth: 8.0,
-                    borderRadius: 36.0,
+              if (widget.prayer.total > 0)
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: RoundedSquareProgressPainter(
+                      progress: progress,
+                      color: theme.colorScheme.primary,
+                      backgroundColor:
+                          theme.colorScheme.primary.withValues(alpha: 0.1),
+                      strokeWidth: 8.0,
+                      borderRadius: 36.0,
+                    ),
                   ),
                 ),
-              ),
               // Inner Button (Rounded Square & Hero)
               Hero(
                 tag: 'IncreaseFAB',
@@ -572,8 +583,8 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
                           const SizedBox(height: 4),
                           Text(
                             themeChangeProvider.language == 'ar'
-                                ? "المقدار: ${widget.prayer.total}"
-                                : "Target: ${widget.prayer.total}",
+                                ? (widget.prayer.total <= 0 ? "المقدار: مفتوح" : "المقدار: ${widget.prayer.total}")
+                                : (widget.prayer.total <= 0 ? "Target: Open" : "Target: ${widget.prayer.total}"),
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -611,8 +622,8 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
         ),
         Text(
           themeChangeProvider.language == 'ar'
-              ? "المقدار: ${widget.prayer.total}"
-              : "Target: ${widget.prayer.total}",
+              ? (widget.prayer.total <= 0 ? "المقدار: مفتوح" : "المقدار: ${widget.prayer.total}")
+              : (widget.prayer.total <= 0 ? "Target: Open" : "Target: ${widget.prayer.total}"),
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
@@ -763,8 +774,8 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
         ),
         Text(
           themeChangeProvider.language == 'ar'
-              ? "المقدار: ${widget.prayer.total}"
-              : "Target: ${widget.prayer.total}",
+              ? (widget.prayer.total <= 0 ? "المقدار: مفتوح" : "المقدار: ${widget.prayer.total}")
+              : (widget.prayer.total <= 0 ? "Target: Open" : "Target: ${widget.prayer.total}"),
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,

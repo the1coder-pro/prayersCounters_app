@@ -37,7 +37,7 @@ class _AddCounterPageState extends State<AddCounterPage> {
 
     if (widget.isEdit && widget.prayer != null) {
       _titleController.text = widget.prayer!.name;
-      _limitController.text = widget.prayer!.total.toString();
+      _limitController.text = widget.prayer!.total > 0 ? widget.prayer!.total.toString() : "";
       _contentController.text = widget.prayer!.content;
       _oldName = widget.prayer!.name;
     }
@@ -56,8 +56,12 @@ class _AddCounterPageState extends State<AddCounterPage> {
 
     final box = Hive.box<Prayer>(boxName);
     final String title = _titleController.text.trim();
-    final int limit = int.tryParse(_limitController.text.trim()) ?? 100;
-    final String content = _contentController.text.trim();
+    final String limitText = _limitController.text.trim();
+    final int limit = limitText.isEmpty ? 0 : (int.tryParse(limitText) ?? 0);
+    String content = _contentController.text.trim();
+    if (content.isEmpty) {
+      content = title;
+    }
 
     Prayer savedPrayer;
 
@@ -176,8 +180,8 @@ class _AddCounterPageState extends State<AddCounterPage> {
                               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                               decoration: InputDecoration(
                                 labelText: themeChangeProvider.language == 'ar'
-                                    ? "العدد المستهدف (الحد الأقصى)"
-                                    : "Target Limit",
+                                    ? "العدد المستهدف (اختياري)"
+                                    : "Target Limit (Optional)",
                                 labelStyle: TextStyle(fontSize: themeChangeProvider.fontSize * 0.65),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -186,9 +190,7 @@ class _AddCounterPageState extends State<AddCounterPage> {
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
-                                  return themeChangeProvider.language == 'ar'
-                                      ? "يرجى إدخال العدد المستهدف"
-                                      : "Please enter a target limit";
+                                  return null;
                                 }
                                 final parsed = int.tryParse(value);
                                 if (parsed == null || parsed <= 0) {
@@ -241,14 +243,7 @@ class _AddCounterPageState extends State<AddCounterPage> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return themeChangeProvider.language == 'ar'
-                                      ? "يرجى إدخال نص الذكر"
-                                      : "Please enter the dhikr text";
-                                }
-                                return null;
-                              },
+                              validator: null,
                             ),
                           ],
                         ),

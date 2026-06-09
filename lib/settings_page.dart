@@ -288,8 +288,12 @@ class _SettingsPageState extends State<SettingsPage> {
                             const SizedBox(width: 16),
                             Text(
                               themeChangeProvider.language == 'ar'
-                                  ? "المقدار: ${item.total}"
-                                  : "Target: ${item.total}",
+                                  ? (item.total <= 0
+                                      ? "المقدار: مفتوح"
+                                      : "المقدار: ${item.total}")
+                                  : (item.total <= 0
+                                      ? "Target: Open"
+                                      : "Target: ${item.total}"),
                               style: TextStyle(
                                 fontSize: themeChangeProvider.fontSize * 0.6,
                                 fontWeight: FontWeight.w500,
@@ -386,6 +390,29 @@ class _SettingsPageState extends State<SettingsPage> {
             value: themeChangeProvider.enableAnimations,
             onChanged: (bool value) {
               themeChangeProvider.enableAnimations = value;
+            },
+          ),
+          const Divider(height: 1),
+          SwitchListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+            title: Text(
+              themeChangeProvider.language == 'ar'
+                  ? "تفعيل الصوت"
+                  : "Enable Audio",
+              style: TextStyle(fontSize: themeChangeProvider.fontSize * 0.75),
+            ),
+            subtitle: Text(
+              themeChangeProvider.language == 'ar'
+                  ? "تشغيل صوت عند انتهاء العداد."
+                  : "Play a sound when a counter is completed.",
+              style: TextStyle(
+                fontSize: themeChangeProvider.fontSize * 0.55,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            value: themeChangeProvider.enableAudio,
+            onChanged: (bool value) {
+              themeChangeProvider.enableAudio = value;
             },
           ),
           const Divider(height: 1),
@@ -885,17 +912,21 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Column(
                   children: [
                     Text(
-                      themeChangeProvider.language == 'ar'
-                          ? "النسخة 1.1.0"
-                          : "Version 1.1.0",
-                      style: const TextStyle(fontSize: 14),
+                      "v1.0.4",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       themeChangeProvider.language == 'ar'
-                          ? "من إنتاج كمَّثرى"
-                          : "Produced by Kumthra",
-                      style: const TextStyle(fontSize: 12),
+                          ? "من انتاج كمَّثرى"
+                          : "Made by Kumthra",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
                     ),
                   ],
                 ),

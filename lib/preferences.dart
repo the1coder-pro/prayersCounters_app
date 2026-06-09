@@ -15,6 +15,7 @@ class TheThemePreference {
   static const CONFIRM_RESET = "CONFIRMRESET";
   static const CONFIRM_INCREMENT = "CONFIRMINCREMENT";
   static const CONFIRM_DECREMENT = "CONFIRMDECREMENT";
+  static const AUDIO_STATUS = "AUDIOSTATUS";
 
   setDarkTheme(bool value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -24,6 +25,16 @@ class TheThemePreference {
   Future<bool> getTheme() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(THEME_STATUS) ?? false;
+  }
+
+  setAudioTheme(bool value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool(AUDIO_STATUS, value);
+  }
+
+  Future<bool> getAudioTheme() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(AUDIO_STATUS) ?? true;
   }
 
   setFontSize(double size) async {
@@ -93,7 +104,7 @@ class TheThemePreference {
 
   Future<bool> getConfirmIncrement() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(CONFIRM_INCREMENT) ?? true;
+    return prefs.getBool(CONFIRM_INCREMENT) ?? false;
   }
 
   setConfirmDecrement(bool value) async {
@@ -183,7 +194,7 @@ class TheThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool _confirmIncrement = true;
+  bool _confirmIncrement = false;
   bool get confirmIncrement => _confirmIncrement;
 
   set confirmIncrement(bool value) {
@@ -207,6 +218,15 @@ class TheThemeProvider with ChangeNotifier {
   set language(String language) {
     _language = language;
     preference.setUILanguage(language);
+    notifyListeners();
+  }
+
+  bool _enableAudio = true;
+  bool get enableAudio => _enableAudio;
+
+  set enableAudio(bool value) {
+    _enableAudio = value;
+    preference.setAudioTheme(value);
     notifyListeners();
   }
 }
