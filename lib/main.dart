@@ -674,9 +674,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     prayer.total > 0 ? "${prayer.finished}/${prayer.total}" : "${prayer.finished}",
                     style: TextStyle(
                       color: theme.colorScheme.surface,
-                      fontSize: 24,
+                      fontSize: prayer.total > 0 ? 24 : 26,
+                      fontWeight: prayer.total > 0 ? FontWeight.normal : FontWeight.bold,
                       fontFamily: 'Ubuntu Mono',
-                      fontFeatures: const [FontFeature.fractions()],
+                      fontFeatures: prayer.total > 0
+                          ? const [FontFeature.fractions()]
+                          : const [],
                     ),
                   ),
                 ),

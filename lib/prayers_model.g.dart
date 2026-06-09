@@ -22,13 +22,15 @@ class PrayerAdapter extends TypeAdapter<Prayer> {
       fields[2] == null ? 0 : fields[2] as int,
       fields[3] as String,
       numberOfCompletedPrayers: fields[5] as int,
+      nextCounterName: fields[6] as String?,
+      misbahColorValue: fields[7] as int?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Prayer obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -38,7 +40,11 @@ class PrayerAdapter extends TypeAdapter<Prayer> {
       ..writeByte(3)
       ..write(obj.content)
       ..writeByte(5)
-      ..write(obj.numberOfCompletedPrayers);
+      ..write(obj.numberOfCompletedPrayers)
+      ..writeByte(6)
+      ..write(obj.nextCounterName)
+      ..writeByte(7)
+      ..write(obj.misbahColorValue);
   }
 
   @override

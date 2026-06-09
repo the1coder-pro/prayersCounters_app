@@ -27,6 +27,7 @@ class _AddCounterPageState extends State<AddCounterPage> {
   late TextEditingController _limitController;
   late TextEditingController _contentController;
   late String _oldName;
+  String? _selectedNextCounter;
 
   @override
   void initState() {
@@ -40,6 +41,7 @@ class _AddCounterPageState extends State<AddCounterPage> {
       _limitController.text = widget.prayer!.total > 0 ? widget.prayer!.total.toString() : "";
       _contentController.text = widget.prayer!.content;
       _oldName = widget.prayer!.name;
+      _selectedNextCounter = widget.prayer!.nextCounterName;
     }
   }
 
@@ -77,11 +79,20 @@ class _AddCounterPageState extends State<AddCounterPage> {
         widget.prayer!.finished,
         content,
         numberOfCompletedPrayers: widget.prayer!.numberOfCompletedPrayers,
+        nextCounterName: _selectedNextCounter,
+        misbahColorValue: widget.prayer!.misbahColorValue,
       );
       await box.put(title, savedPrayer);
     } else {
       // Creating a new counter
-      savedPrayer = Prayer(title, limit, 0, content, numberOfCompletedPrayers: 0);
+      savedPrayer = Prayer(
+        title,
+        limit,
+        0,
+        content,
+        numberOfCompletedPrayers: 0,
+        nextCounterName: _selectedNextCounter,
+      );
       await box.put(title, savedPrayer);
     }
 
@@ -199,6 +210,45 @@ class _AddCounterPageState extends State<AddCounterPage> {
                                       : "Please enter a valid number greater than zero";
                                 }
                                 return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            DropdownButtonFormField<String>(
+                              value: _selectedNextCounter,
+                              style: TextStyle(
+                                fontSize: themeChangeProvider.fontSize * 0.7,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                              decoration: InputDecoration(
+                                labelText: themeChangeProvider.language == 'ar'
+                                    ? "العداد التالي (اختياري)"
+                                    : "Next Counter (Optional)",
+                                labelStyle: TextStyle(fontSize: themeChangeProvider.fontSize * 0.65),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                prefixIcon: const Icon(Icons.navigate_next_outlined),
+                              ),
+                              items: [
+                                DropdownMenuItem<String>(
+                                  value: null,
+                                  child: Text(
+                                    themeChangeProvider.language == 'ar' ? "بلا تحديد" : "None",
+                                  ),
+                                ),
+                                ...Hive.box<Prayer>(boxName)
+                                    .values
+                                    .where((p) => p.name != (widget.prayer?.name ?? ''))
+                                    .map((p) => p.name)
+                                    .map((name) => DropdownMenuItem<String>(
+                                          value: name,
+                                          child: Text(name),
+                                        )),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedNextCounter = value;
+                                });
                               },
                             ),
                           ],
