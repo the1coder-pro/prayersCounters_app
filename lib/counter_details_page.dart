@@ -10,6 +10,7 @@ import 'package:prayers_counters_app/main.dart';
 import 'package:prayers_counters_app/prayers_model.dart';
 import 'package:prayers_counters_app/preferences.dart';
 import 'package:provider/provider.dart';
+import 'package:m3e_core/m3e_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:prayers_counters_app/audio_player_helper.dart';
 
@@ -258,12 +259,12 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
                             title: const Text('حذف العداد'),
                             content: const Text('هل تريد حذف هذا العداد؟'),
                             actions: [
-                              TextButton(
+                              M3ETextButton(
                                   onPressed: () {
                                     Navigator.pop(context);
                                   },
                                   child: const Text('لا')),
-                              TextButton(
+                              M3EFilledButton.tonal(
                                   onPressed: () async {
                                     await Hive.box<Prayer>(boxName)
                                         .delete(widget.prayer.name);
@@ -456,7 +457,7 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
                               message: themeChangeProvider.language == 'ar'
                                   ? "العداد التالي: ${widget.prayer.nextCounterName}"
                                   : "Next Counter: ${widget.prayer.nextCounterName}",
-                              child: TextButton.icon(
+                              child: M3EFilledButton.tonalIcon(
                                 onPressed: _navigateToNextCounter,
                                 icon: Icon(
                                   Icons.skip_next_outlined,
@@ -475,12 +476,10 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
                                     color: theme.colorScheme.primary,
                                   ),
                                 ),
-                                style: TextButton.styleFrom(
+                                decoration: M3EButtonDecoration.styleFrom(
                                   backgroundColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
                                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
+                                  borderRadius: 12,
                                 ),
                               ),
                             )
@@ -564,11 +563,11 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
                                       content: Text(
                                           "هل أنت متأكد من تصفير عداد \"${widget.prayer.name}\"؟"),
                                       actions: [
-                                        TextButton(
+                                        M3ETextButton(
                                           onPressed: () => Navigator.pop(context),
                                           child: const Text("لا"),
                                         ),
-                                        TextButton(
+                                        M3EFilledButton.tonal(
                                           onPressed: () {
                                             performReset();
                                             Navigator.pop(context);

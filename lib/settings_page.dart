@@ -95,12 +95,12 @@ class _SettingsPageState extends State<SettingsPage> {
             style: const TextStyle(fontSize: 18),
           ),
           actions: [
-            TextButton(
+            M3ETextButton(
               onPressed: () => Navigator.pop(context, false),
               child: Text(
                   themeChangeProvider.language == 'ar' ? "إلغاء" : "Cancel"),
             ),
-            TextButton(
+            M3EFilledButton.tonal(
               onPressed: () => Navigator.pop(context, true),
               child:
                   Text(themeChangeProvider.language == 'ar' ? "إضافة" : "Add"),
@@ -312,12 +312,11 @@ class _SettingsPageState extends State<SettingsPage> {
               },
             ),
             const SizedBox(height: 16),
-            ElevatedButton.icon(
+            M3EElevatedButton.icon(
               onPressed: () => _addDefaultCounters(context),
-              style: ElevatedButton.styleFrom(
+              decoration: M3EButtonDecoration.styleFrom(
                 minimumSize: const Size.fromHeight(55),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                borderRadius: 12,
                 backgroundColor: theme.colorScheme.primaryContainer,
                 foregroundColor: theme.colorScheme.onPrimaryContainer,
                 elevation: 0,
@@ -344,18 +343,7 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding:
-                const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 8),
-            child: Text(
-              themeChangeProvider.language == 'ar' ? "المظهر" : "Appearance",
-              style: TextStyle(
-                fontSize: themeChangeProvider.fontSize * 0.9,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-          ),
+          const SizedBox(height: 12),
           SwitchListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 20),
             title: Text(
@@ -796,7 +784,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
+            M3EElevatedButton.icon(
               onPressed: () {
                 showDialog(
                   context: context,
@@ -811,18 +799,18 @@ class _SettingsPageState extends State<SettingsPage> {
                           : "Reset Counters?"),
                       content: Text(
                         themeChangeProvider.language == 'ar'
-                            ? "هل أنت متأكد من تصفير قيم جميع العدادات والبدء من الصفر؟"
+                            ? "هل أنت متأكد من تصفير قيم جميع العدادات والبدء من الصفر?"
                             : "Are you sure you want to reset all counters and start from zero?",
                         style: const TextStyle(fontSize: 18),
                       ),
                       actions: [
-                        TextButton(
+                        M3ETextButton(
                           onPressed: () => Navigator.pop(context),
                           child: Text(themeChangeProvider.language == 'ar'
                               ? "إلغاء"
                               : "Cancel"),
                         ),
-                        TextButton(
+                        M3EFilledButton.tonal(
                           onPressed: () async {
                             final box = Hive.box<Prayer>(boxName);
                             for (var key in box.keys) {
@@ -844,10 +832,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 );
               },
-              style: ElevatedButton.styleFrom(
+              decoration: M3EButtonDecoration.styleFrom(
                 minimumSize: const Size.fromHeight(55),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                borderRadius: 12,
                 backgroundColor: theme.colorScheme.secondaryContainer,
                 foregroundColor: theme.colorScheme.onSecondaryContainer,
                 elevation: 0,
@@ -861,7 +848,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             const SizedBox(height: 12),
-            ElevatedButton.icon(
+            M3EElevatedButton.icon(
               onPressed: () {
                 showDialog(
                   context: context,
@@ -881,13 +868,13 @@ class _SettingsPageState extends State<SettingsPage> {
                         style: const TextStyle(fontSize: 18),
                       ),
                       actions: [
-                        TextButton(
+                        M3ETextButton(
                           onPressed: () => Navigator.pop(context),
                           child: Text(themeChangeProvider.language == 'ar'
                               ? "إلغاء"
                               : "Cancel"),
                         ),
-                        TextButton(
+                        M3EFilledButton.tonal(
                           onPressed: () async {
                             final box = Hive.box<Prayer>(boxName);
                             await box.clear();
@@ -902,10 +889,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 );
               },
-              style: ElevatedButton.styleFrom(
+              decoration: M3EButtonDecoration.styleFrom(
                 minimumSize: const Size.fromHeight(55),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                borderRadius: 12,
                 backgroundColor: theme.colorScheme.errorContainer,
                 foregroundColor: theme.colorScheme.onErrorContainer,
                 elevation: 0,
@@ -934,7 +920,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Column(
                   children: [
                     Text(
-                      "v1.0.5",
+                      "v1.0.6",
                       style: TextStyle(
                         fontSize: 14,
                         color: Theme.of(context).colorScheme.outline,

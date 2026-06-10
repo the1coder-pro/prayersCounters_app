@@ -325,9 +325,8 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       // sliver app bar
 
-      body: Center(
-        child: ValueListenableBuilder(
-            valueListenable: Hive.box<Prayer>(boxName).listenable(),
+      body: ValueListenableBuilder(
+          valueListenable: Hive.box<Prayer>(boxName).listenable(),
             builder: (context, Box<Prayer> box, widget) {
               mainBox = box;
               if (box.isEmpty) {
@@ -411,7 +410,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      FilledButton.icon(
+                      M3EFilledButton.icon(
                         onPressed: () {
                           Navigator.push(
                             context,
@@ -420,12 +419,10 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                           );
                         },
-                        style: FilledButton.styleFrom(
+                        decoration: M3EButtonDecoration.styleFrom(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+                          borderRadius: 16,
                         ),
                         icon: const Icon(Icons.add_circle_outline),
                         label: Text(
@@ -446,7 +443,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 return _buildPrayerTab(themeChangeProvider);
               }
             }),
-      ),
     );
   }
 
@@ -548,12 +544,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   isFasting: false,
                 ),
               )
-            : ListView.builder(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                itemCount: items.length,
-                itemBuilder: (context, i) => _buildPrayerListCard(
-                    context, items[i], box, items[i].name, themeChangeProvider),
+            : SingleChildScrollView(
+                child: M3ECardList(
+                  itemCount: items.length,
+                  color: Theme.of(context).colorScheme.surfaceContainer,
+                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: EdgeInsets.zero,
+                  itemBuilder: (context, i) => _buildPrayerListCard(
+                      context, items[i], box, items[i].name, themeChangeProvider),
+                ),
               );
       },
     );
@@ -571,6 +570,25 @@ class _MyHomePageState extends State<MyHomePage> {
         children: [
           SlidableAction(
             onPressed: (context) async {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddCounterPage(
+                    prayer: prayer,
+                    isEdit: true,
+                  ),
+                ),
+              ).then((_) {
+                setState(() {});
+              });
+            },
+            backgroundColor: theme.colorScheme.primaryContainer,
+            foregroundColor: theme.colorScheme.onPrimaryContainer,
+            icon: Icons.edit_outlined,
+            label: themeChangeProvider.language == 'ar' ? 'تعديل' : 'Edit',
+          ),
+          SlidableAction(
+            onPressed: (context) async {
               bool? result = await _showDeleteConfirmation(context);
               if (result == true) {
                 await box.delete(key);
@@ -579,8 +597,8 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             backgroundColor: theme.colorScheme.errorContainer,
             foregroundColor: theme.colorScheme.onErrorContainer,
-            icon: Icons.delete,
-            label: 'حذف',
+            icon: Icons.delete_outline,
+            label: themeChangeProvider.language == 'ar' ? 'حذف' : 'Delete',
           ),
         ],
       ),
@@ -591,15 +609,10 @@ class _MyHomePageState extends State<MyHomePage> {
           }));
         },
         child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isCompleted
-                ? theme.colorScheme.onSurface.withOpacity(0.05)
-                : theme.colorScheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(20),
-            border: null,
-          ),
+          color: isCompleted
+              ? theme.colorScheme.onSurface.withOpacity(0.08)
+              : Colors.transparent,
           child: Row(
             children: [
               // Minus Button logic
@@ -640,7 +653,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
 
-              TextButton(
+              M3EFilledButton.tonal(
                 onPressed: () {
                   if (themeChangeProvider.confirmIncrement) {
                     confirmationAlert(context, prayer, box, key, true);
@@ -649,10 +662,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         prayer, box, key, themeChangeProvider.enableAudio);
                   }
                 },
-                style: TextButton.styleFrom(
+                decoration: M3EButtonDecoration.styleFrom(
                   backgroundColor: theme.colorScheme.primaryContainer,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                  foregroundColor: theme.colorScheme.onPrimaryContainer,
+                  borderRadius: 12,
                 ),
                 child: Text(
                   themeChangeProvider.language == 'ar' ? "تسبيح" : "Tasbih",
@@ -774,7 +787,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  TextButton(
+                  M3EFilledButton.tonal(
                     onPressed: () {
                       if (themeChangeProvider.confirmIncrement) {
                         confirmationAlert(context, prayer, box, key, true);
@@ -783,10 +796,10 @@ class _MyHomePageState extends State<MyHomePage> {
                             prayer, box, key, themeChangeProvider.enableAudio);
                       }
                     },
-                    style: TextButton.styleFrom(
+                    decoration: M3EButtonDecoration.styleFrom(
                       backgroundColor: theme.colorScheme.primaryContainer,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                      foregroundColor: theme.colorScheme.onPrimaryContainer,
+                      borderRadius: 12,
                       minimumSize: const Size(160, 40),
                     ),
                     child: Text(
@@ -897,10 +910,10 @@ class _MyHomePageState extends State<MyHomePage> {
         title: const Text("تأكيد الحذف"),
         content: const Text("هل أنت متأكد من حذف هذا العداد؟"),
         actions: [
-          TextButton(
+          M3ETextButton(
               onPressed: () => Navigator.pop(context, false),
               child: const Text("إلغاء")),
-          TextButton(
+          M3EFilledButton.tonal(
               onPressed: () => Navigator.pop(context, true),
               child: const Text("حذف")),
         ],
@@ -935,17 +948,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   style: const TextStyle(fontSize: 20),
                 ),
                 actions: [
-                  TextButton(
+                  M3ETextButton(
+                      onPressed: () => Navigator.pop(context),
                       child: Text(
                         isAr ? "لا" : "No",
                         style: const TextStyle(fontSize: 15),
-                      ),
-                      onPressed: () => Navigator.pop(context)),
-                  TextButton(
-                      child: Text(
-                        isAr ? "نعم" : "Yes",
-                        style: const TextStyle(fontSize: 15),
-                      ),
+                      )),
+                  M3EFilledButton.tonal(
                       onPressed: () async {
                         if (addition) {
                           if (prayer.total <= 0) {
@@ -963,7 +972,11 @@ class _MyHomePageState extends State<MyHomePage> {
                         await box
                             .put(key, prayer)
                             .then((e) => Navigator.pop(context));
-                      })
+                      },
+                      child: Text(
+                        isAr ? "نعم" : "Yes",
+                        style: const TextStyle(fontSize: 15),
+                      ))
                 ],
               ),
             ));
