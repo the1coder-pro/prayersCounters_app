@@ -303,7 +303,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   themeChangeProvider.language == 'ar'
                       ? "عداد التسبيح"
                       : "Tasbih Counter",
-                  style: const TextStyle(fontFamily: "Lateef", fontSize: 40))),
+                  style: const TextStyle(fontFamily: "Lateef", fontSize: 32))),
       floatingActionButton: ValueListenableBuilder<Box<Prayer>>(
         valueListenable: Hive.box<Prayer>(boxName).listenable(),
         builder: (context, box, _) {

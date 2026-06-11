@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:prayers_counters_app/color_schemes.g.dart';
 import 'package:prayers_counters_app/main.dart';
@@ -920,7 +921,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Column(
                   children: [
                     Text(
-                      "v1.0.7",
+                      "v1.0.8",
                       style: TextStyle(
                         fontSize: 14,
                         color: Theme.of(context).colorScheme.outline,
@@ -1112,7 +1113,7 @@ class _SettingsPageState extends State<SettingsPage> {
 }
 
 // ignore: camel_case_types
-class themeButton extends StatelessWidget {
+class themeButton extends StatefulWidget {
   const themeButton({
     super.key,
     required this.themeChange,
@@ -1125,18 +1126,38 @@ class themeButton extends StatelessWidget {
   final ColorScheme darkColorScheme;
 
   @override
+  State<themeButton> createState() => _themeButtonState();
+}
+
+// ignore: camel_case_types
+class _themeButtonState extends State<themeButton> {
+  late final String _uniqueHeroTag;
+
+  @override
+  void initState() {
+    super.initState();
+    _uniqueHeroTag = Random().nextInt(1000000).toString();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
+      decoration: BoxDecoration(
+        color: widget.themeChange.darkTheme
+            ? widget.darkColorScheme.surface
+            : widget.lightColorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: FloatingActionButton.small(
-        heroTag: 'themeFab-${lightColorScheme} - ${darkColorScheme}',
+        heroTag: _uniqueHeroTag,
         elevation: 0,
         onPressed: null,
-        foregroundColor: themeChange.darkTheme
-            ? lightColorScheme.onPrimaryContainer
-            : darkColorScheme.onPrimaryContainer,
-        backgroundColor: themeChange.darkTheme
-            ? lightColorScheme.primaryContainer
-            : darkColorScheme.primaryContainer,
+        foregroundColor: widget.themeChange.darkTheme
+            ? widget.darkColorScheme.surface
+            : widget.lightColorScheme.surface,
+        backgroundColor: widget.themeChange.darkTheme
+            ? widget.darkColorScheme.primary
+            : widget.lightColorScheme.primary,
         child: const Icon(Icons.add),
       ),
     );
