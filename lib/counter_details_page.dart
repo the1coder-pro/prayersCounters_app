@@ -1,6 +1,5 @@
 // ignore: must_be_immutable
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -35,7 +34,6 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
   AnimationController? reloadController;
   late Animation<double> _scaleAnimation;
   double _contentFontSize = 24.0;
-  Timer? _sizeTimer;
   CounterViewMode _viewMode = CounterViewMode.bigButton;
   late FixedExtentScrollController _scrollController;
   int _lastSelectedIndex = 50000;
@@ -147,34 +145,109 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
     controller?.forward(from: 0);
   }
 
-  void _changeFontSize(bool increase) async {
-    setState(() {
-      if (increase) {
-        if (_contentFontSize < 100) {
-          _contentFontSize += 3;
-          if (_contentFontSize > 100) _contentFontSize = 100;
-        }
-      } else {
-        if (_contentFontSize > 10) {
-          _contentFontSize -= 3;
-          if (_contentFontSize < 10) _contentFontSize = 10;
-        }
-      }
-    });
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble("font_size_${widget.prayer.name}", _contentFontSize);
-  }
-
-  void _startChangingSize(bool increase) {
-    _sizeTimer?.cancel();
-    _sizeTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      _changeFontSize(increase);
-    });
-  }
-
-  void _stopChangingSize() {
-    _sizeTimer?.cancel();
-    _sizeTimer = null;
+  void _showFontSizeBottomSheet(BuildContext context, TheThemeProvider themeChangeProvider) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            final isAr = themeChangeProvider.language == 'ar';
+            return Directionality(
+              textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      Text(
+                        isAr ? "حجم الخط" : "Font Size",
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: "Rubik",
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Icon(Icons.text_fields, size: 16),
+                          Expanded(
+                            child: Slider(
+                              value: _contentFontSize,
+                              min: 10.0,
+                              max: 100.0,
+                              divisions: 90,
+                              label: _contentFontSize.round().toString(),
+                              onChanged: (double value) async {
+                                setModalState(() {
+                                  _contentFontSize = value;
+                                });
+                                setState(() {
+                                  _contentFontSize = value;
+                                });
+                                final prefs = await SharedPreferences.getInstance();
+                                await prefs.setDouble("font_size_${widget.prayer.name}", _contentFontSize);
+                              },
+                            ),
+                          ),
+                          const Icon(Icons.text_fields, size: 28),
+                        ],
+                      ),
+                      Text(
+                        _contentFontSize.round().toString(),
+                        style: const TextStyle(fontSize: 16, fontFamily: "Rubik"),
+                      ),
+                      const SizedBox(height: 16),
+                      M3EFilledButton.tonal(
+                        onPressed: () async {
+                          final prefs = await SharedPreferences.getInstance();
+                          final box = Hive.box<Prayer>(boxName);
+                          for (var prayer in box.values) {
+                            await prefs.setDouble("font_size_${prayer.name}", _contentFontSize);
+                          }
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isAr
+                                      ? "تم تطبيق حجم الخط على جميع العدادات"
+                                      : "Font size applied to all counters",
+                                  style: const TextStyle(fontFamily: "Rubik"),
+                                ),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        },
+                        child: Text(
+                          isAr ? "تطبيق على جميع العدادات" : "Apply to all counters",
+                          style: const TextStyle(fontFamily: "Rubik"),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -205,24 +278,10 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
             ),
           ),
           actions: [
-            // Font size triggers directly on AppBar
-            GestureDetector(
-              onTap: () => _changeFontSize(false),
-              onLongPressStart: (_) => _startChangingSize(false),
-              onLongPressEnd: (_) => _stopChangingSize(),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                child: Icon(Icons.text_decrease_outlined, size: 20),
-              ),
-            ),
-            GestureDetector(
-              onTap: () => _changeFontSize(true),
-              onLongPressStart: (_) => _startChangingSize(true),
-              onLongPressEnd: (_) => _stopChangingSize(),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                child: Icon(Icons.text_increase_outlined, size: 20),
-              ),
+            // Single font size button to show bottom sheet
+            IconButton(
+              icon: const Icon(Icons.format_size_outlined, size: 22),
+              onPressed: () => _showFontSizeBottomSheet(context, themeChangeProvider),
             ),
             PopupMenuButton<String>(
               icon: Icon(Icons.more_vert_outlined,
@@ -1082,7 +1141,6 @@ class _CounterDetailsPageState extends State<CounterDetailsPage>
     controller?.dispose();
     reloadController?.dispose();
     _scrollController.dispose();
-    _sizeTimer?.cancel();
     super.dispose();
   }
 }
