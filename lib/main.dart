@@ -327,16 +327,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
       body: ValueListenableBuilder(
           valueListenable: Hive.box<Prayer>(boxName).listenable(),
-            builder: (context, Box<Prayer> box, widget) {
-              mainBox = box;
-              if (box.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Center(
-                        child: SvgPicture.string(
-                          '''
+          builder: (context, Box<Prayer> box, widget) {
+            mainBox = box;
+            if (box.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Center(
+                      child: SvgPicture.string(
+                        '''
                         <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
           <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="1080px" height="1080px" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -379,70 +379,67 @@ class _MyHomePageState extends State<MyHomePage> {
             <g><path style="opacity:1" fill="${Theme.of(context).colorScheme.primary.toHex}" d="M 700.5,900.5 C 720.286,899.782 733.452,908.782 740,927.5C 742.057,948.877 732.891,963.044 712.5,970C 691.917,971.447 678.417,962.28 672,942.5C 670.291,920.735 679.791,906.735 700.5,900.5 Z"/></g>
             </svg>
                             ''',
-                          height: 300,
-                          width: 500,
-                        ),
+                        height: 300,
+                        width: 500,
                       ),
-                      // const Image(image: AssetImage('images/kaaba_3d.png')),
-                      Text(
+                    ),
+                    // const Image(image: AssetImage('images/kaaba_3d.png')),
+                    Text(
+                      themeChangeProvider.language == 'ar'
+                          ? "عداد التسبيح الإلكتروني"
+                          : "Electronic Tasbih Counter",
+                      style: const TextStyle(
+                          letterSpacing: 0, fontSize: 35, fontFamily: "Lateef"),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                      child: Text(
                         themeChangeProvider.language == 'ar'
-                            ? "عداد التسبيح الإلكتروني"
-                            : "Electronic Tasbih Counter",
-                        style: const TextStyle(
-                            letterSpacing: 0,
-                            fontSize: 35,
-                            fontFamily: "Lateef"),
+                            ? "اضغط على الزر أدناه\nلإضافة عداد جديد والبدء بالتسبيح."
+                            : "Tap the button below\nto add a new counter and start tasbih.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: themeChangeProvider.fontSize * 0.55,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          height: 1.4,
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                        child: Text(
-                          themeChangeProvider.language == 'ar'
-                              ? "اضغط على الزر أدناه\nلإضافة عداد جديد والبدء بالتسبيح."
-                              : "Tap the button below\nto add a new counter and start tasbih.",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: themeChangeProvider.fontSize * 0.55,
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                            height: 1.4,
+                    ),
+                    const SizedBox(height: 24),
+                    M3EFilledButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AddCounterPage(),
                           ),
+                        );
+                      },
+                      decoration: M3EButtonDecoration.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 16),
+                        borderRadius: 16,
+                      ),
+                      icon: const Icon(Icons.add_circle_outline),
+                      label: Text(
+                        themeChangeProvider.language == 'ar'
+                            ? "إضافة عداد جديد"
+                            : "Add New Counter",
+                        style: TextStyle(
+                          fontSize: themeChangeProvider.fontSize * 0.65,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      M3EFilledButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AddCounterPage(),
-                            ),
-                          );
-                        },
-                        decoration: M3EButtonDecoration.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 16),
-                          borderRadius: 16,
-                        ),
-                        icon: const Icon(Icons.add_circle_outline),
-                        label: Text(
-                          themeChangeProvider.language == 'ar'
-                              ? "إضافة عداد جديد"
-                              : "Add New Counter",
-                          style: TextStyle(
-                            fontSize: themeChangeProvider.fontSize * 0.65,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 30),
-                    ],
-                  ),
-                );
-              } else {
-                return _buildPrayerTab(themeChangeProvider);
-              }
-            }),
+                    ),
+                    const SizedBox(height: 30),
+                  ],
+                ),
+              );
+            } else {
+              return _buildPrayerTab(themeChangeProvider);
+            }
+          }),
     );
   }
 
@@ -495,8 +492,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   const SizedBox(height: 20),
                   Text(
                     isSourceEmpty
-                        ? (isArabic ? 'لا توجد عدادات مضافة' : 'No counters found')
-                        : (isArabic ? 'لا توجد نتائج مطابقة' : 'No results found'),
+                        ? (isArabic
+                            ? 'لا توجد عدادات مضافة'
+                            : 'No counters found')
+                        : (isArabic
+                            ? 'لا توجد نتائج مطابقة'
+                            : 'No results found'),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurface,
@@ -548,10 +549,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: M3ECardList(
                   itemCount: items.length,
                   color: Theme.of(context).colorScheme.surfaceContainer,
-                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   padding: EdgeInsets.zero,
-                  itemBuilder: (context, i) => _buildPrayerListCard(
-                      context, items[i], box, items[i].name, themeChangeProvider),
+                  itemBuilder: (context, i) => _buildPrayerListCard(context,
+                      items[i], box, items[i].name, themeChangeProvider),
                 ),
               );
       },
@@ -561,7 +563,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _buildPrayerListCard(BuildContext context, Prayer prayer,
       Box<Prayer> box, dynamic key, themeChangeProvider) {
     final theme = Theme.of(context);
-    final bool isCompleted = prayer.total > 0 && prayer.finished >= prayer.total;
+    final bool isCompleted =
+        prayer.total > 0 && prayer.finished >= prayer.total;
 
     return Slidable(
       key: ValueKey(prayer.name),
@@ -653,7 +656,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
 
-              M3EFilledButton.tonal(
+              M3EFilledButton(
                 onPressed: () {
                   if (themeChangeProvider.confirmIncrement) {
                     confirmationAlert(context, prayer, box, key, true);
@@ -663,15 +666,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                 },
                 decoration: M3EButtonDecoration.styleFrom(
-                  backgroundColor: theme.colorScheme.primaryContainer,
-                  foregroundColor: theme.colorScheme.onPrimaryContainer,
-                  borderRadius: 12,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  // backgroundColor: theme.colorScheme.primaryContainer,
+                  // foregroundColor: theme.colorScheme.onPrimaryContainer,
+                  // borderRadius: 12,
                 ),
                 child: Text(
                   themeChangeProvider.language == 'ar' ? "تسبيح" : "Tasbih",
-                  style: TextStyle(
-                      color: theme.colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
 
@@ -686,11 +689,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 child: Center(
                   child: Text(
-                    prayer.total > 0 ? "${prayer.finished}/${prayer.total}" : "${prayer.finished}",
+                    prayer.total > 0
+                        ? "${prayer.finished}/${prayer.total}"
+                        : "${prayer.finished}",
                     style: TextStyle(
                       color: theme.colorScheme.surface,
                       fontSize: prayer.total > 0 ? 24 : 26,
-                      fontWeight: prayer.total > 0 ? FontWeight.normal : FontWeight.bold,
+                      fontWeight: prayer.total > 0
+                          ? FontWeight.normal
+                          : FontWeight.bold,
                       fontFamily: 'Ubuntu Mono',
                       fontFeatures: prayer.total > 0
                           ? const [FontFeature.fractions()]
@@ -710,7 +717,8 @@ class _MyHomePageState extends State<MyHomePage> {
       dynamic key, themeChangeProvider,
       {bool isFasting = false}) {
     final theme = Theme.of(context);
-    final bool isCompleted = prayer.total > 0 && prayer.finished >= prayer.total;
+    final bool isCompleted =
+        prayer.total > 0 && prayer.finished >= prayer.total;
 
     return Container(
       decoration: BoxDecoration(
@@ -773,7 +781,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Text(
-                       prayer.total > 0 ? "${prayer.finished}/${prayer.total}" : "${prayer.finished}",
+                      prayer.total > 0
+                          ? "${prayer.finished}/${prayer.total}"
+                          : "${prayer.finished}",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: theme.colorScheme.surface,
@@ -787,7 +797,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  M3EFilledButton.tonal(
+                  M3EFilledButton(
                     onPressed: () {
                       if (themeChangeProvider.confirmIncrement) {
                         confirmationAlert(context, prayer, box, key, true);
@@ -797,17 +807,16 @@ class _MyHomePageState extends State<MyHomePage> {
                       }
                     },
                     decoration: M3EButtonDecoration.styleFrom(
-                      backgroundColor: theme.colorScheme.primaryContainer,
-                      foregroundColor: theme.colorScheme.onPrimaryContainer,
-                      borderRadius: 12,
-                      minimumSize: const Size(160, 40),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      // backgroundColor: theme.colorScheme.primaryContainer,
+                      // foregroundColor: theme.colorScheme.onPrimaryContainer,
+                      // minimumSize: const Size(160, 40),
                     ),
                     child: Text(
                       themeChangeProvider.language == 'ar' ? "تسبيح" : "Tasbih",
-                      style: TextStyle(
-                          fontSize: 15,
-                          color: theme.colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],

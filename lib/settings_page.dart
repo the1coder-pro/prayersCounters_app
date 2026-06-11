@@ -433,7 +433,7 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 Text(
                   themeChangeProvider.language == 'ar'
-                      ? "السمات المتاحة"
+                      ? "السمات"
                       : "Available Themes",
                   style:
                       TextStyle(fontSize: themeChangeProvider.fontSize * 0.75),
@@ -920,7 +920,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Column(
                   children: [
                     Text(
-                      "v1.0.6",
+                      "v1.0.7",
                       style: TextStyle(
                         fontSize: 14,
                         color: Theme.of(context).colorScheme.outline,
@@ -1132,11 +1132,11 @@ class themeButton extends StatelessWidget {
         elevation: 0,
         onPressed: null,
         foregroundColor: themeChange.darkTheme
-            ? darkColorScheme.onPrimaryContainer
-            : lightColorScheme.onPrimaryContainer,
+            ? lightColorScheme.onPrimaryContainer
+            : darkColorScheme.onPrimaryContainer,
         backgroundColor: themeChange.darkTheme
-            ? darkColorScheme.primaryContainer
-            : lightColorScheme.primaryContainer,
+            ? lightColorScheme.primaryContainer
+            : darkColorScheme.primaryContainer,
         child: const Icon(Icons.add),
       ),
     );
