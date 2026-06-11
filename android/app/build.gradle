@@ -48,7 +48,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.orange.prayer_counter"
+        applicationId "com.kumthra.prayers_counters"
         minSdkVersion 21 
         targetSdkVersion 31
         // You can update the following values to match your application needs.
