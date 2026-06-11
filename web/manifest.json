@@ -5,7 +5,7 @@
     "display": "standalone",
     "background_color": "#fbf8ff",
     "theme_color": "#fbf8ff",
-    "description": "تطبيق لإدارة عدادات التسبيح",
+    "description": "تطبيق يساعدك في متابعة وإتمام الأذكار والتسبيحات",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
